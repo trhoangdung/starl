@@ -12,9 +12,10 @@ buildscript {
 
     repositories {
         jcenter()
+        google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.3'
+        classpath 'com.android.tools.build:gradle:3.1.1'
 
         //Dexcount gradle plugin
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.6.4'
@@ -118,6 +119,7 @@ allprojects {
                 password getMavenApiKey()
             }
         }
+        google()
     }
     tasks.withType(JavaCompile){
         sourceCompatibility = '1.7'
