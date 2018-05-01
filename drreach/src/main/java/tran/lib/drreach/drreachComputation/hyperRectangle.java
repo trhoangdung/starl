@@ -2,6 +2,7 @@ package tran.lib.drreach.drreachComputation;
 
 import javax.management.RuntimeErrorException;
 
+
 // hyperRectangle class
 // Dung Tran: 5/1/2018, update:
 // Reference: Real-Time Reachability for Verified Simplex Design, RTSS 2014
@@ -74,21 +75,6 @@ public class hyperRectangle {
         }
 
         return bloatedRect;
-    }
-
-    public void plot_1D(int x_dim){
-        // plot hyperRectangle in 1D
-        ;
-    }
-
-    public void plot_2D(int x_dim, int y_dim){
-        // plot hyperRectangle in 2D
-        ;
-    }
-
-    public void plot_3D(int x_dim, int y_dim, int z_dim){
-        // plot hyperRectangle in 3D
-        ;
     }
 
 }

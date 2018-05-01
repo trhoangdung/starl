@@ -28,4 +28,6 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     compile project(':starLSim')
     compile project(':starLib')
+    implementation files('libs/jmathio.jar')
+    implementation files('libs/jmathplot.jar')
 }
