@@ -23,6 +23,7 @@ public class Main {
 		settings.DRAW_WAYPOINT_NAMES(false);
 		settings.DRAWER(new drreachDrawer());
 		settings.DRAW_TRACE(true);
+		//settings.TRACE_OUT_DIR("/home/trhoangdung/tools/starl");
 		settings.DRAW__ROBOT_TYPE(true);
 		//
 		Simulation sim = new Simulation(drreachApp.class, settings.build());

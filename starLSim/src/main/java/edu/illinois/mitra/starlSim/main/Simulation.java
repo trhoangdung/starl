@@ -581,27 +581,6 @@ public class Simulation {
 					}
                 }
 
-                // the code below doesn't work because when using both bot types it will try to cast one as the other
-
-				/*if(((PositionList) arg).getList().get(0) instanceof Model_iRobot){
-					ArrayList<Model_iRobot> pos = ((PositionList<Model_iRobot>) arg).getList();
-					// Add robots
-					for(Model_iRobot ip : pos) {
-						RobotData nextBot = new RobotData(ip.name, ip.x, ip.y, ip.angle, ip.receivedTime);
-						nextBot.radius = settings.BOT_RADIUS;
-						rd.add(nextBot);
-					}
-				}
-				else if(((PositionList) arg).getList().get(0) instanceof Model_quadcopter){
-					ArrayList<Model_quadcopter> pos = ((PositionList<Model_quadcopter>) arg).getList();
-					// Add robots
-					for(Model_quadcopter ip : pos) {
-						RobotData nextBot = new RobotData(ip.name, ip.x, ip.y, ip.z, ip.yaw, ip.pitch, ip.roll, ip.receivedTime);
-						nextBot.radius = settings.BOT_RADIUS;
-						rd.add(nextBot);
-					}
-				}*/
-
 				gl.updateData(rd, simEngine.getTime());
 			}
 		};
@@ -636,6 +615,8 @@ public class Simulation {
 				List<Object> res = f.get();
 				if(res != null && !res.isEmpty())
 					resultsList.add(res);
+					System.out.print("test printing result over time");
+					System.out.print(res);
 			} catch(CancellationException e) {
 				// If the executor timed out, the result is cancelled
 				System.err.println("Simulation timed out! Execution reached " + settings.TIMEOUT + " sec duration. Aborting.");
