@@ -1,4 +1,5 @@
 package tran.lib.drreach.drreachComputation;
+
 // FaceLifting Class implements Face-Lifting method
 // Dung Tran: 5/2/2018
 // References: 1) Reachability Analysis via Face-Lifting
@@ -41,12 +42,19 @@ public class FaceLifting {
     }
 
     public double lift_single_rect(HyperRectangle rect, double stepsize, double timeRemaining){
-        // Do a single face lifting operation
+        // Do a single face lifting operation.
+        // !!! Note that this is done for all faces of the hyperRectangle
         // Return time elapsed
 
         double timeElapsed = 0;
 
+        int numFaces = 2 * rect.dim; // number of faces need to be lifted
 
+        HyperRectangle bloatedRect = rect; // initial rectangle
+
+        double[] nebWidth = new double[numFaces]; // an array of nebWidth that used to lift faces (i.e., bloat the rect in all dimensions)
+
+        ;
 
 
         return timeElapsed;

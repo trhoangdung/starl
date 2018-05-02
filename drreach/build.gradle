@@ -30,4 +30,5 @@ dependencies {
     compile project(':starLib')
     implementation files('libs/jmathio.jar')
     implementation files('libs/jmathplot.jar')
+    implementation files('libs/Jama-1.0.3.jar')
 }
