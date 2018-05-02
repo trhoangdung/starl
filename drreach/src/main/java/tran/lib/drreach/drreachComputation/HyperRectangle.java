@@ -3,14 +3,27 @@ package tran.lib.drreach.drreachComputation;
 public class HyperRectangle {
     Interval[] intervals;
     int dim;
+
+    // constructor
     public HyperRectangle(Interval[] input_intervals){
         intervals = input_intervals;
         dim = intervals.length;
+    }
+    // constructor
+    public HyperRectangle(int dimensions){
+        if (dimensions > 0){
+            dim = dimensions;
+            intervals = new Interval[dim];
+        }
+        else{
+            throw new java.lang.Error("invalid dimension");
+        }
     }
 
     public int get_dim(){
         return dim;
     }
+
     public Interval get_interval(int at_dim){
 
         if (at_dim <= dim){
@@ -24,4 +37,5 @@ public class HyperRectangle {
         }
 
     }
+
 }
