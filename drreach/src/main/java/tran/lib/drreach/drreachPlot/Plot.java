@@ -1,5 +1,6 @@
 package tran.lib.drreach.drreachPlot;
-import tran.lib.drreach.drreachComputation.hyperRectangle;
+import tran.lib.drreach.drreachComputation.HyperRectangle;
+import tran.lib.drreach.drreachComputation.Interval;
 import org.math.plot.*;
 
 import java.awt.Color;
@@ -7,16 +8,17 @@ import java.awt.Color;
 import javax.swing.*;
 
 import javax.swing.JFrame;
+import javax.swing.event.*;
 
 
 public class Plot {
 
-    public void plot_hyperRect_1D(hyperRectangle rect, int x_dim){
+    public void plot_hyperRect_1D(HyperRectangle rect, int x_dim){
         // plot hyperRectangle in 1D
         ;
     }
 
-    private Plot2DPanel plot_hyperRect_2D(Plot2DPanel plot, hyperRectangle rect, int x_dim, int y_dim){
+    private Plot2DPanel plot_HyperRect_2D(Plot2DPanel plot, HyperRectangle rect, int x_dim, int y_dim){
 
         // plot one hyperRectangle in 2D
 
@@ -26,10 +28,10 @@ public class Plot {
         }
         else{
 
-            double[] min_vec = rect.get_min_vec();
-            double[] max_vec = rect.get_max_vec();
-            double[] x = {min_vec[x_dim], min_vec[x_dim], max_vec[x_dim], max_vec[x_dim], min_vec[x_dim]};
-            double[] y = {min_vec[y_dim], max_vec[y_dim], max_vec[y_dim], min_vec[y_dim], min_vec[y_dim]};
+            Interval x_interval = rect.get_interval(x_dim);
+            Interval y_interval = rect.get_interval(y_dim);
+            double[] x = {x_interval.min, x_interval.min, x_interval.max, x_interval.max, x_interval.min};
+            double[] y = {y_interval.min, y_interval.max, y_interval.max, y_interval.min, y_interval.min};
 
             plot.addLinePlot("", Color.BLUE, x, y);
         }
@@ -37,7 +39,7 @@ public class Plot {
         return plot;
     }
 
-    public void plot_hyperRects_2D(hyperRectangle[] rect_list, int x_dim, int y_dim){
+    public void plot_HyperRects_2D(HyperRectangle[] rect_list, int x_dim, int y_dim){
 
         // plot list of hyperRectangle in 2D
 
@@ -46,8 +48,8 @@ public class Plot {
         Plot2DPanel plot = new Plot2DPanel();
 
         for (int i=0; i < n; i++){
-            hyperRectangle rect = rect_list[i];
-            plot = plot_hyperRect_2D(plot, rect, x_dim, y_dim);
+            HyperRectangle rect = rect_list[i];
+            plot = plot_HyperRect_2D(plot, rect, x_dim, y_dim);
         }
 
         JFrame frame = new JFrame("Plot of list of hyperRectangles");
@@ -58,7 +60,7 @@ public class Plot {
 
     }
 
-    public void plot_hyperRect_3D(hyperRectangle rect, int x_dim, int y_dim, int z_dim){
+    public void plot_hyperRect_3D(HyperRectangle rect, int x_dim, int y_dim, int z_dim){
         // plot hyperRectangle in 3D
         ;
     }
