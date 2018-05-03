@@ -1,5 +1,8 @@
 package tran.lib.drreach.drreachComputation;
 
+// Setting for Face-lifting method
+// Dung Tran: 5/3/2018 LastUpdate: ---
+
 public class ComputationSetting {
     // Some setting for reachable set computation using face lifting method
 
