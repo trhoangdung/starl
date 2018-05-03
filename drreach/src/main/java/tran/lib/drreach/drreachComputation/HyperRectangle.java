@@ -1,8 +1,8 @@
 package tran.lib.drreach.drreachComputation;
 
 public class HyperRectangle {
-    Interval[] intervals;
-    int dim;
+    public Interval[] intervals;
+    public int dim;
 
     // constructor
     public HyperRectangle(Interval[] input_intervals){
