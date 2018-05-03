@@ -41,6 +41,9 @@ public class FaceLifting {
         return bloatedRect;
     }
 
+    double MAX_DER = new ComputationSetting().MAX_DER;
+    double MIN_DER = new ComputationSetting().MIN_DER;
+
     public double lift_single_rect(HyperRectangle rect, double stepsize, double timeRemaining){
         // Do a single face lifting operation.
         // !!! Note that this is done for all faces of the hyperRectangle
@@ -48,13 +51,21 @@ public class FaceLifting {
 
         double timeElapsed = 0;
 
-        int numFaces = 2 * rect.dim; // number of faces need to be lifted
+        int NUM_FACES = 2 * rect.dim; // number of faces need to be lifted
 
         HyperRectangle bloatedRect = rect; // initial rectangle
 
-        double[] nebWidth = new double[numFaces]; // an array of nebWidth that used to lift faces (i.e., bloat the rect in all dimensions)
+        double[] nebWidth = new double[NUM_FACES]; // an array of nebWidth that used to lift faces (i.e., bloat the rect in all dimensions)
 
-        ;
+        //initialize nebWidth
+        for (int f = 0; f < NUM_FACES; f ++){
+            nebWidth[f] = 0;
+        }
+
+        boolean needRecompute = true;
+        double minNebCrossTime;
+        double[] ders = new double[NUM_FACES];
+
 
 
         return timeElapsed;
