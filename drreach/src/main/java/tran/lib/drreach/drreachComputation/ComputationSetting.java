@@ -8,7 +8,6 @@ public class ComputationSetting {
 
     public final double MAX_DER = 99999; // necessary to guarantee loop termination
     public final double MIN_DER = -99999;
-    public final double DBL_DER = 0; // used to intialize the minimum Neighborhood cross time.
-
+    public final double DBL_MAX = Double.MAX_VALUE; // used to intialize the minimum Neighborhood cross time.
 
 }

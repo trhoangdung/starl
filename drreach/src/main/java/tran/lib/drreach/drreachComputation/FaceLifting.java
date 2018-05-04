@@ -43,6 +43,7 @@ public class FaceLifting {
 
     double MAX_DER = new ComputationSetting().MAX_DER;
     double MIN_DER = new ComputationSetting().MIN_DER;
+    double DBL_MAX = new ComputationSetting().DBL_MAX;
 
     public double lift_single_rect(HyperRectangle rect, double stepsize, double timeRemaining){
         // Do a single face lifting operation.
@@ -66,7 +67,26 @@ public class FaceLifting {
         double minNebCrossTime;
         double[] ders = new double[NUM_FACES];
 
+        while (needRecompute){
 
+            needRecompute = false;
+            minNebCrossTime = DBL_MAX;
+
+            for (int f = 0; f < NUM_FACES; ++f){
+
+                int dim = f / 2;
+                boolean isMin = (f % 2) == 0;
+
+                HyperRectangle faceNebRect;
+
+
+
+            }
+
+
+
+
+        }
 
         return timeElapsed;
 
