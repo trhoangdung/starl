@@ -7,7 +7,7 @@ package tran.lib.drreach.drreachDynamics;
 
 import tran.lib.drreach.drreachComputation.HyperRectangle;
 
-public class Linear_Pendulumn {
+public class Linear_Pendulum {
 
 
     // this class implements a saturated controlled inverted pendulum
@@ -69,25 +69,25 @@ public class Linear_Pendulumn {
 
         double[][] points = {
 
-            {rect.intervals[0].min, rect.intervals[1].min, rect.intervals[2].min, rect.intervals[3].min},
-            {rect.intervals[0].min, rect.intervals[1].min, rect.intervals[2].min, rect.intervals[3].max},
-            {rect.intervals[0].min, rect.intervals[1].min, rect.intervals[2].max, rect.intervals[3].min},
-            {rect.intervals[0].min, rect.intervals[1].min, rect.intervals[2].max, rect.intervals[3].max},
+                {rect.intervals[0].min, rect.intervals[1].min, rect.intervals[2].min, rect.intervals[3].min},
+                {rect.intervals[0].min, rect.intervals[1].min, rect.intervals[2].min, rect.intervals[3].max},
+                {rect.intervals[0].min, rect.intervals[1].min, rect.intervals[2].max, rect.intervals[3].min},
+                {rect.intervals[0].min, rect.intervals[1].min, rect.intervals[2].max, rect.intervals[3].max},
 
-            {rect.intervals[0].min, rect.intervals[1].max, rect.intervals[2].min, rect.intervals[3].min},
-            {rect.intervals[0].min, rect.intervals[1].max, rect.intervals[2].min, rect.intervals[3].max},
-            {rect.intervals[0].min, rect.intervals[1].max, rect.intervals[2].max, rect.intervals[3].min},
-            {rect.intervals[0].min, rect.intervals[1].max, rect.intervals[2].max, rect.intervals[3].max},
+                {rect.intervals[0].min, rect.intervals[1].max, rect.intervals[2].min, rect.intervals[3].min},
+                {rect.intervals[0].min, rect.intervals[1].max, rect.intervals[2].min, rect.intervals[3].max},
+                {rect.intervals[0].min, rect.intervals[1].max, rect.intervals[2].max, rect.intervals[3].min},
+                {rect.intervals[0].min, rect.intervals[1].max, rect.intervals[2].max, rect.intervals[3].max},
 
-            {rect.intervals[0].max, rect.intervals[1].min, rect.intervals[2].min, rect.intervals[3].min},
-            {rect.intervals[0].max, rect.intervals[1].min, rect.intervals[2].min, rect.intervals[3].max},
-            {rect.intervals[0].max, rect.intervals[1].min, rect.intervals[2].max, rect.intervals[3].min},
-            {rect.intervals[0].max, rect.intervals[1].min, rect.intervals[2].max, rect.intervals[3].max},
+                {rect.intervals[0].max, rect.intervals[1].min, rect.intervals[2].min, rect.intervals[3].min},
+                {rect.intervals[0].max, rect.intervals[1].min, rect.intervals[2].min, rect.intervals[3].max},
+                {rect.intervals[0].max, rect.intervals[1].min, rect.intervals[2].max, rect.intervals[3].min},
+                {rect.intervals[0].max, rect.intervals[1].min, rect.intervals[2].max, rect.intervals[3].max},
 
-            {rect.intervals[0].max, rect.intervals[1].max, rect.intervals[2].min, rect.intervals[3].min},
-            {rect.intervals[0].max, rect.intervals[1].max, rect.intervals[2].min, rect.intervals[3].max},
-            {rect.intervals[0].max, rect.intervals[1].max, rect.intervals[2].max, rect.intervals[3].min},
-            {rect.intervals[0].max, rect.intervals[1].max, rect.intervals[2].max, rect.intervals[3].max},
+                {rect.intervals[0].max, rect.intervals[1].max, rect.intervals[2].min, rect.intervals[3].min},
+                {rect.intervals[0].max, rect.intervals[1].max, rect.intervals[2].min, rect.intervals[3].max},
+                {rect.intervals[0].max, rect.intervals[1].max, rect.intervals[2].max, rect.intervals[3].min},
+                {rect.intervals[0].max, rect.intervals[1].max, rect.intervals[2].max, rect.intervals[3].max},
         };
 
 
