@@ -50,7 +50,7 @@ public class FaceLifting {
     double MIN_DER = new ComputationSetting().MIN_DER;
     double DBL_MAX = new ComputationSetting().DBL_MAX;
 
-    public double lift_single_rect(int dynamics_index, HyperRectangle rect, double stepsize, double timeRemaining){
+    public SingleLiftingResult lift_single_rect(int dynamics_index, HyperRectangle rect, double stepsize, double timeRemaining){
         // Do a single face lifting operation.
         // !!! Note that this is done for all faces of the hyperRectangle
         // Return time elapsed
@@ -201,7 +201,51 @@ public class FaceLifting {
             throw new java.lang.Error("lifted rect is outside of bloated rect");
         }
 
-        return timeElapsed;
+        SingleLiftingResult rs = new SingleLiftingResult(timeElapsed, rect);
+        return rs;
 
     }
+
+    public FaceLiftingResult face_lifting_iterative_improvement(int startMs, LiftingSettings setting){
+
+
+
+        int iter = 0; // number of iteration
+        double stepSize = setting.initialStepSize;
+        int dynamics_index = setting.dynamics_index;
+
+        while(true){
+            iter++;
+            boolean safe = true;
+
+            if (stepSize < 0.0000001){
+                break;
+                throw new java.lang.Error("Step size is too small");
+            }
+
+            double timeRemaining = setting.reachTime;
+            HyperRectangle trackedRect = setting.initRect;
+            HyperRectangle hull = trackedRect;
+            UnsafeSet unsafe_set = setting.unsafe_set;
+
+            while (safe && timeRemaining > 0){ // do face lifting with current stepSize, check safety at runtime
+
+                SingleLiftingResult singleRes = lift_single_rect(dynamics_index, trackedRect, stepSize, timeRemaining);
+
+                double timeElapsed = singleRes.timeElapsed;
+                trackedRect = singleRes.trackedRect;
+
+                hull.convex_hull(trackedRect);      // get convex-hull of reachable sets
+                safe = hull.check_intersect(unsafe_set);    // check safety
+
+            }
+
+            FaceLiftingResult rs = new FaceLiftingResult(hull, safe, iter);
+            return rs;
+        }
+
+
+    }
+
+
 }

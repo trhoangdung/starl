@@ -167,7 +167,7 @@ public class Model_3DR extends ItemPosition implements TrackedRobot {
         windyNoise =  yNoise + windy*Math.sin(windt);
 
 
-        //	double yawNoise = (rand.nextDouble()*2*noises[3]) - noises[3];
+        //double yawNoise = (rand.nextDouble()*2*noises[3]) - noises[3];
         //double pitchNoise = (rand.nextDouble()*2*noises[4]) - noises[4];
         //double rollNoise = (rand.nextDouble()*2*noises[5]) - noises[5];
 

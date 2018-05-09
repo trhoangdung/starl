@@ -7,8 +7,8 @@ public class Interval {
     public double max;
 
     public Interval(double input_min, double input_max) {
-        min = input_min;
-        max = input_max;
+        this.min = input_min;
+        this.max = input_max;
     }
 
     public double get_width() {

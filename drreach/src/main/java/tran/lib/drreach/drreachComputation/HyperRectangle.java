@@ -1,19 +1,26 @@
 package tran.lib.drreach.drreachComputation;
 
+import net.sourceforge.interval.ia_math.RealInterval;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.Map;
+
 public class HyperRectangle {
     public Interval[] intervals;
     public int dim;
 
     // constructor
     public HyperRectangle(Interval[] input_intervals){
-        intervals = input_intervals;
-        dim = intervals.length;
+        this.intervals = input_intervals;
+        this.dim = intervals.length;
     }
     // constructor
     public HyperRectangle(int dimensions){
         if (dimensions > 0){
-            dim = dimensions;
-            intervals = new Interval[dim];
+            this.dim = dimensions;
+            this.intervals = new Interval[dim];
         }
         else{
             throw new java.lang.Error("invalid dimension");
@@ -65,6 +72,63 @@ public class HyperRectangle {
             }
         }
 
+
+        return rv;
+    }
+
+    public HyperRectangle convex_hull(HyperRectangle contained){
+        // do convex-hull of two rectangles
+
+        if (this.dim != contained.dim){
+            throw new java.lang.Error("Error: Dimension inconsistency to make a convex hull");
+        }
+        else{
+            for (int d = 0; d < this.dim; ++d){
+                if (contained.intervals[d].min < this.intervals[d].min){
+                    this.intervals[d].min = contained.intervals[d].min;
+                }
+                if (contained.intervals[d].max > this.intervals[d].max){
+                    this.intervals[d].max = contained.intervals[d].max;
+                }
+            }
+        }
+
+        return this;
+    }
+
+    public boolean check_intersect(UnsafeSet unsafe_set){
+        // check if this rectangle intersect with unsafe region
+
+        boolean rv = false;
+
+        HashMap<Integer, RealInterval> us = unsafe_set.unsafe_set;
+
+        Set<Integer> dims = us.keySet();
+
+        for (Integer d: dims){
+
+            if ((d > this.dim) || (d < 0)){
+                throw new java.lang.Error("Invalid dimension for checking safety");
+            }
+            else{
+                RealInterval interval = us.get(d);
+
+                if ((this.intervals[d].max >= interval.lo()) && (this.intervals[d].max <= interval.hi())){
+
+                    rv = true;
+                    break;
+
+                }
+
+                if ((this.intervals[d].min >= interval.lo()) && (this.intervals[d].min <= interval.hi())){
+
+                    rv = true;
+                    break;
+
+                }
+
+            }
+        }
 
         return rv;
     }
