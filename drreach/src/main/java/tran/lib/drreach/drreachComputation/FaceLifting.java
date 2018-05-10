@@ -206,45 +206,69 @@ public class FaceLifting {
 
     }
 
-    public FaceLiftingResult face_lifting_iterative_improvement(int startMs, LiftingSettings setting){
-
+    public FaceLiftingResult face_lifting_iterative_improvement(long startMs, LiftingSettings setting){
 
 
         int iter = 0; // number of iteration
         double stepSize = setting.initialStepSize;
         int dynamics_index = setting.dynamics_index;
+        double runTimeRemaining = setting.maxRuntimeMilliseconds;
+        boolean safe = true;
+        HyperRectangle hull = setting.initRect;
+        FaceLiftingResult rs = new FaceLiftingResult();
+        rs.set_start_time(startMs);     // set start time
 
-        while(true){
+        while(runTimeRemaining > 0.0){
+
             iter++;
-            boolean safe = true;
+            rs.update_iteration_number(iter); // update iteration number
+            rs.reset_reach_set();   // reset the reachable set to store the new reachable set using new stepSize
+            safe = true;
 
             if (stepSize < 0.0000001){
-                break;
                 throw new java.lang.Error("Step size is too small");
             }
 
-            double timeRemaining = setting.reachTime;
+            double reachTimeRemaining = setting.reachTime;
+            double reachTimeAdvance = 0.0;
             HyperRectangle trackedRect = setting.initRect;
-            HyperRectangle hull = trackedRect;
             UnsafeSet unsafe_set = setting.unsafe_set;
 
-            while (safe && timeRemaining > 0){ // do face lifting with current stepSize, check safety at runtime
+            while (safe && reachTimeRemaining > 0){ // do face lifting with current stepSize, check safety at runtime
 
-                SingleLiftingResult singleRes = lift_single_rect(dynamics_index, trackedRect, stepSize, timeRemaining);
+                SingleLiftingResult singleRes = lift_single_rect(dynamics_index, trackedRect, stepSize, reachTimeRemaining);
 
-                double timeElapsed = singleRes.timeElapsed;
+                double reachTimeElapsed = singleRes.timeElapsed;
                 trackedRect = singleRes.trackedRect;
 
                 hull.convex_hull(trackedRect);      // get convex-hull of reachable sets
                 safe = hull.check_intersect(unsafe_set);    // check safety
 
+                rs.update_stepSize(stepSize); // update step size
+                rs.update_safety(safe); // update safety status
+                rs.update_hull(hull);   // update hull
+                reachTimeAdvance += reachTimeElapsed;
+                rs.update_reach_set(reachTimeAdvance, trackedRect); // update reachable set
+
+                if (!safe){
+
+                    rs.set_unsafe_rect(trackedRect);
+                    rs.set_unsafe_time(reachTimeAdvance);
+
+                }
+
+                reachTimeRemaining -= reachTimeElapsed;
             }
 
-            FaceLiftingResult rs = new FaceLiftingResult(hull, safe, iter);
-            return rs;
+            runTimeRemaining -= System.currentTimeMillis() - startMs;
+
+            if (runTimeRemaining > 0.0){ // if we still have time, redoing face lifting with a smaller step to get the as good as possible result.
+                stepSize = stepSize / 2.0;
+            }
+
         }
 
-
+        return rs;
     }
 
 
