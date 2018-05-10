@@ -1,4 +1,4 @@
-package tran.lib.drreach.drreachPlot.Tests;
+package tran.lib.drreach.drreachTest;
 
 import java.util.Arrays;
 

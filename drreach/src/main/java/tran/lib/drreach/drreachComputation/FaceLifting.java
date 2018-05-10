@@ -1,7 +1,7 @@
 package tran.lib.drreach.drreachComputation;
 
 // FaceLifting Class implements Face-Lifting method
-// Dung Tran: 5/2/2018 LastUpdate: 5/3/2018
+// Dung Tran: 5/2/2018 LastUpdate: 5/10/2018
 // References: 1) Reachability Analysis via Face-Lifting
 //             2) Real-time Reachability Anlysis for Verified Simplex Design
 
