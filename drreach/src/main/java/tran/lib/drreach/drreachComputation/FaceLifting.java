@@ -16,19 +16,19 @@ import java.util.concurrent.BlockingDeque;
 public class FaceLifting implements Runnable {
 
     /**
-     * !!!!!!!!!! PLEASE READ IN DETAIL TO SEE HOW REAL-TIME SAFETY VERIFICATION FOR DISTRIBUTED SYSTEMS WORK
+     * !!!!!!!!!! PLEASE READ THIS IN DETAIL TO SEE HOW REAL-TIME SAFETY VERIFICATION FOR DISTRIBUTED SYSTEMS WORK
      *
      * Each agent run faceLifting method locally, it computes forwardly the the reachable set (a convex hull)
      * from its current time (start-time) to future time an amount of time called reachTime, i.e. [current-time, future-time],
      * future-time - current-time = reachTime
      *
-     * The reachable set computation need to be done within an certain amount of time call runTime << reachTime. (this is where
+     * The reachable set computation need to be done within an certain amount of time called runTime << reachTime. (this is where
      * the iteratively improved face-lifting method takes places by changing step-size in doing face-lifting).
      *
      * The reachable set (a convex hull) is then put in its given protected queue with a given time-stamp, i.e.,
      * the time in which the reachable set is valid. The time-stamp is done using the local agent time.
      *
-     * A central analyzer will read the reachable sets of all agents from all queues and analyze the safety based on distributed traces analysis method
+     * A central analyzer will read the reachable sets of all agents from all queues and analyze the safety based on distributed reachable set analysis method
      *
      * Note that there are mismatches between local times of the agents. Assume that the clock of these agents are synchronized up to some accuracy
      *
@@ -44,9 +44,9 @@ public class FaceLifting implements Runnable {
      * 1) check if an agent reach some obstacles when moving. These obstacles are assumed to be static and immobile.
      *
      * This check is done locally by the agent its self since it is assumed to known the locations of the obstacles.
-     * This check is done simultaneously when the agent do face-lifting
+     * This check is done simultaneously when the agent do face-lifting by checking the intersection between its reach set with unsafe region
      *
-     * 2) check if agents are collided with each other. This is done by a global analyzer. This global analyzer will
+     * 2) check if agents are collided with each other. This is done by a global (central) analyzer. This global analyzer will
      * read all reachable set of all agents from their corresponding queues.
      *
      * The distributed reach set analysis is done from these reachable sets having time-stamps mismatches.
