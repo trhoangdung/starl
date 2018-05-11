@@ -6,9 +6,76 @@ package tran.lib.drreach.drreachComputation;
 //             2) Real-time Reachability Anlysis for Verified Simplex Design
 
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Callable;
+
 import tran.lib.drreach.drreachDynamics.Dynamics_Bounds;
 
-public class FaceLifting {
+import java.util.concurrent.BlockingDeque;
+
+public class FaceLifting implements Runnable {
+
+    /**
+     * !!!!!!!!!! PLEASE READ IN DETAIL TO SEE HOW REAL-TIME SAFETY VERIFICATION FOR DISTRIBUTED SYSTEMS WORK
+     *
+     * Each agent run faceLifting method locally, it computes forwardly the the reachable set (a convex hull)
+     * from its current time (start-time) to future time an amount of time called reachTime, i.e. [current-time, future-time],
+     * future-time - current-time = reachTime
+     *
+     * The reachable set computation need to be done within an certain amount of time call runTime << reachTime. (this is where
+     * the iteratively improved face-lifting method takes places by changing step-size in doing face-lifting).
+     *
+     * The reachable set (a convex hull) is then put in its given protected queue with a given time-stamp, i.e.,
+     * the time in which the reachable set is valid. The time-stamp is done using the local agent time.
+     *
+     * A central analyzer will read the reachable sets of all agents from all queues and analyze the safety based on distributed traces analysis method
+     *
+     * Note that there are mismatches between local times of the agents. Assume that the clock of these agents are synchronized up to some accuracy
+     *
+     * A formal method need to deal with these mismatches to have a formal guarantee about the safety of the distributed system.
+     *
+     */
+
+    /**
+     * The safety of the distributed system is predicted from a global current-time to a global future-time
+     *
+     * This safety checking includes two parts:
+     *
+     * 1) check if an agent reach some obstacles when moving. These obstacles are assumed to be static and immobile.
+     *
+     * This check is done locally by the agent its self since it is assumed to known the locations of the obstacles.
+     * This check is done simultaneously when the agent do face-lifting
+     *
+     * 2) check if agents are collided with each other. This is done by a global analyzer. This global analyzer will
+     * read all reachable set of all agents from their corresponding queues.
+     *
+     * The distributed reach set analysis is done from these reachable sets having time-stamps mismatches.
+     *
+     */
+
+
+
+    long startMs;
+    LiftingSettings setting;
+    protected BlockingDeque<FaceLiftingResult> queue = null;
+
+    // constructor
+    public FaceLifting(long startMs, LiftingSettings setting){
+        this.startMs = startMs;
+        this.setting = setting;
+    }
+
+    @Override
+    public void run(){
+
+        FaceLiftingResult rs = face_lifting_iterative_improvement(startMs, setting);
+        try{
+            queue.put(rs); // put the result into a queue
+        } catch (InterruptedException e){
+            e.printStackTrace();
+        }
+
+    }
 
 
     public static HyperRectangle make_neighborhood_rect(HyperRectangle bloatedRect, HyperRectangle originalRect, int f, double nebWidth){
@@ -216,7 +283,8 @@ public class FaceLifting {
         boolean safe = true;
         HyperRectangle hull = setting.initRect;
         FaceLiftingResult rs = new FaceLiftingResult();
-        rs.set_start_time(startMs);     // set start time
+        double start_time = (double) startMs;
+        rs.set_start_time(start_time / 1000.0);     // set start time
 
         while(runTimeRemaining > 0.0){
 
@@ -268,8 +336,9 @@ public class FaceLifting {
 
         }
 
+        rs.set_valid_time(start_time + setting.reachTime); // valid time for this faceLifting result
+
         return rs;
     }
-
 
 }

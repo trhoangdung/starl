@@ -10,7 +10,8 @@ public class FaceLiftingResult {
     public boolean safe;
     public int iter_num; // iteration number
     public double stepSize_used = 0.0; // the step size currently used to get this result
-    public double startTime; // store the start time when a face lifting method is called.
+    public double startTime; // store the start time when a face lifting method is called. (in seconds)
+    public double validTime; // the time that this face lifting result is valid, validTime = startTime + reachTime (in seconds)
 
     public HashMap<Double, HyperRectangle> reachSets; // store reachable set overtime
 
@@ -25,8 +26,12 @@ public class FaceLiftingResult {
         this.unsafe_time = unsafe_time;
     }
 
-    public void set_start_time(long start_time){
+    public void set_start_time(double start_time){
         this.startTime = start_time;
+    }
+
+    public void set_valid_time(double valid_time){
+        this.validTime = valid_time;
     }
 
     public void update_hull(HyperRectangle new_hull){
