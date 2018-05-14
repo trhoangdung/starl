@@ -5,11 +5,11 @@ public class LiftingSettings {
     public double reachTime;   // total reach time
     public double initialStepSize;     // the initial size of the steps to use
     public double maxRectWidthBeforeError; // maximum allowed rectangle size
-    public int maxRuntimeMilliseconds; // maximum runtime in milliseconds
+    public long maxRuntimeMilliseconds; // maximum runtime in milliseconds
     public int dynamics_index; // specify dynamics for the lifting
     public UnsafeSet unsafe_set; // specify unsafe set to check in runtime
 
-    public LiftingSettings(HyperRectangle init_rect, double reach_time, double initial_step_size, double max_rect_width_before_error, int max_runtime_milliseconds, int dynamics_index, UnsafeSet unsafe_set){
+    public LiftingSettings(HyperRectangle init_rect, double reach_time, double initial_step_size, double max_rect_width_before_error, long max_runtime_milliseconds, int dynamics_index, UnsafeSet unsafe_set){
         // constructor for LiftingSettings
 
         this.initRect = init_rect;  // initial set

@@ -133,4 +133,14 @@ public class HyperRectangle {
         return rv;
     }
 
+    public void print(){
+        // print this hyper-rectangle
+
+        for (int i = 0; i < dim; i++){
+            System.out.print(String.format("dim = %s -> [%.2f, %.2f] \n", i, intervals[i].min, intervals[i].max));
+        }
+
+
+    }
+
 }

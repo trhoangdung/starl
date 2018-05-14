@@ -12,6 +12,7 @@ import java.util.concurrent.BlockingQueue;
 import tran.lib.drreach.drreachComputation.FaceLifting;
 import tran.lib.drreach.drreachComputation.FaceLiftingResult;
 
+
 public class GlobalAnalyzer implements Runnable {
 
     public boolean global_safe = true;

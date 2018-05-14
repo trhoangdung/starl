@@ -54,6 +54,7 @@ public class GlobalAnalyzer implements Runnable{
 
     public boolean analyze_distributed_reach_set(){
 
+        System.out.print("The system is globally safe \n");
         return global_safe;
     }
 

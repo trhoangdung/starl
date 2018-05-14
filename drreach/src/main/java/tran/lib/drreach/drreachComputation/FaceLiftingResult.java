@@ -1,7 +1,7 @@
 package tran.lib.drreach.drreachComputation;
 
 // Object to contain FaceLifting Result
-// Dung Tran: 5/9/2018 Update:
+// Dung Tran: 5/9/2018 Update: 5/14/2018
 
 import java.util.HashMap;
 
@@ -13,9 +13,9 @@ public class FaceLiftingResult {
     public double startTime; // store the start time when a face lifting method is called. (in seconds)
     public double validTime; // the time that this face lifting result is valid, validTime = startTime + reachTime (in seconds)
 
-    public HashMap<Double, HyperRectangle> reachSets; // store reachable set overtime
+    public HashMap<Double, HyperRectangle> reachSets = new HashMap<Double, HyperRectangle>(); // store reachable set overtime
 
-    public HyperRectangle unsafe_rect = new HyperRectangle(hull.dim); // unsafe rectangle
+    public HyperRectangle unsafe_rect; // unsafe rectangle
     public double unsafe_time;
 
     public void set_unsafe_rect(HyperRectangle unsafe_rect){
@@ -48,11 +48,16 @@ public class FaceLiftingResult {
 
     public void update_reach_set(double reachTimeAdvance, HyperRectangle trackedRect){
         // this is to store reachable set a long time for checking and plotting if necessary
+
         this.reachSets.put(reachTimeAdvance, trackedRect);
+
     }
 
     public void reset_reach_set(){
-        this.reachSets.clear();
+
+        if (reachSets != null && !reachSets.isEmpty()){
+            this.reachSets.clear();
+        }
     }
 
     public void update_stepSize(double current_stepSize){

@@ -7,6 +7,7 @@ package tran.lib.drreach.drreachComputation;
 
 
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 
 import tran.lib.drreach.drreachDynamics.Dynamics_Bounds;
@@ -57,20 +58,25 @@ public class FaceLifting implements Runnable {
 
     long startMs;
     LiftingSettings setting;
-    protected BlockingDeque<FaceLiftingResult> queue = null;
+    protected BlockingQueue<FaceLiftingResult> queue = null;
 
     // constructor
-    public FaceLifting(long startMs, LiftingSettings setting){
+    public FaceLifting(long startMs, LiftingSettings setting, BlockingQueue<FaceLiftingResult> assigned_queue){
         this.startMs = startMs;
         this.setting = setting;
+        this.queue = assigned_queue;
     }
 
     @Override
     public void run(){
 
+        System.out.print("Doing face-lifting iteratively \n");
         FaceLiftingResult rs = face_lifting_iterative_improvement(startMs, setting);
+
         try{
+            System.out.print("put the face lifting result into queue \n");
             queue.put(rs); // put the result into a queue
+
         } catch (InterruptedException e){
             e.printStackTrace();
         }
@@ -131,12 +137,13 @@ public class FaceLifting implements Runnable {
          * ...
          */
 
-        double timeElapsed = 0;
 
         int NUM_FACES = 2 * rect.dim; // number of faces need to be lifted
         int NUM_DIMS = rect.dim; // number of dimensions
 
         HyperRectangle bloatedRect = rect; // initial rectangle
+        System.out.print("initial rectangle \n");
+        bloatedRect.print();
 
         double[] nebWidth = new double[NUM_FACES]; // an array of nebWidth that used to lift faces (i.e., bloat the rect in all dimensions)
 
@@ -167,6 +174,8 @@ public class FaceLifting implements Runnable {
                 // test derivative inside neighborhood;
                 Dynamics_Bounds db = new Dynamics_Bounds();
                 Double der = db.get_dynamics_bounds(dynamics_index, faceNebRect, f);
+
+                //System.out.print("Derivative at face " +f +" = " +der + "\n");
 
                 if (der > MAX_DER){
                     der = MAX_DER;
@@ -202,6 +211,8 @@ public class FaceLifting implements Runnable {
                 if (needRecompute){
 
                     nebWidth[f] = newNebWidth;
+
+                    //System.out.print("adjust bloated rect for later recomputation\n");
 
                     if (isMin && nebWidth[f] < 0){
                         bloatedRect.intervals[dim].min = rect.intervals[dim].min + nebWidth[f];
@@ -246,12 +257,14 @@ public class FaceLifting implements Runnable {
 
         }
 
+        System.out.print("minNebCrossTime = " +minNebCrossTime + "\n");
+        System.out.print("Bloated Rect \n");
+        bloatedRect.print();
+
         // Lift each face by the minimum time //
 
         double timeToElapse = minNebCrossTime;
         // subtract a tiny amount time due to multiplication / division rounding
-
-        timeToElapse = timeToElapse * 99999 / 100000;
 
         if (timeRemaining  < timeToElapse){
             timeToElapse = timeRemaining;
@@ -264,11 +277,14 @@ public class FaceLifting implements Runnable {
             rect.intervals[d].max += ders[2*d + 1] * timeToElapse;
         }
 
-        if (bloatedRect.contains(rect, true)){
+        System.out.print("rect after lifting \n");
+        rect.print();
+
+        if (!bloatedRect.contains(rect, true)){
             throw new java.lang.Error("lifted rect is outside of bloated rect");
         }
-
-        SingleLiftingResult rs = new SingleLiftingResult(timeElapsed, rect);
+        System.out.print("Time To Elapse = " +timeToElapse +"\n");
+        SingleLiftingResult rs = new SingleLiftingResult(timeToElapse, rect);
         return rs;
 
     }
@@ -289,6 +305,8 @@ public class FaceLifting implements Runnable {
         while(runTimeRemaining > 0.0){
 
             iter++;
+            System.out.print("Iteration = " +iter +"\n");
+            System.out.print("Step size used for this iteration is " +stepSize +"\n");
             rs.update_iteration_number(iter); // update iteration number
             rs.reset_reach_set();   // reset the reachable set to store the new reachable set using new stepSize
             safe = true;
@@ -328,7 +346,13 @@ public class FaceLifting implements Runnable {
                 reachTimeRemaining -= reachTimeElapsed;
             }
 
-            runTimeRemaining -= System.currentTimeMillis() - startMs;
+            System.out.print("Start Time = " +startMs +"\n");
+            long current = System.currentTimeMillis();
+            System.out.print("Current Time = " +current +"\n");
+            long runTimeElapsed = current - startMs;
+            System.out.print("runTimeElaped = "+runTimeElapsed +"\n");
+            runTimeRemaining -= runTimeElapsed;
+            System.out.print("Remaining run time = "+runTimeRemaining +"\n");
 
             if (runTimeRemaining > 0.0){ // if we still have time, redoing face lifting with a smaller step to get the as good as possible result.
                 stepSize = stepSize / 2.0;
