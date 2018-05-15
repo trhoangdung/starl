@@ -45,7 +45,7 @@ public class Test_Iterative_Face_Lifting {
         LiftingSettings setting = new LiftingSettings(init_rect, reachTime, initialStepSize, max_rect_width_before_error, max_runtime_milliseconds, dynamics_index, unsafe_set);
 
 
-        FaceLifting Agent1 = new FaceLifting(System.currentTimeMillis(), setting, queue);
+        FaceLifting Agent1 = new FaceLifting(setting, queue);
 
 
         FaceLiftingResult rs = Agent1.face_lifting_iterative_improvement(System.currentTimeMillis(), setting);

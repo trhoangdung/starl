@@ -57,13 +57,11 @@ public class FaceLifting implements Runnable {
 
 
 
-    long startMs;
     LiftingSettings setting;
     protected BlockingQueue<FaceLiftingResult> queue = null;
 
     // constructor
-    public FaceLifting(long startMs, LiftingSettings setting, BlockingQueue<FaceLiftingResult> assigned_queue){
-        this.startMs = startMs;
+    public FaceLifting(LiftingSettings setting, BlockingQueue<FaceLiftingResult> assigned_queue){
         this.setting = setting;
         this.queue = assigned_queue;
     }
@@ -73,7 +71,7 @@ public class FaceLifting implements Runnable {
 
         System.out.print("Doing face-lifting iteratively \n");
         try{
-            FaceLiftingResult rs = face_lifting_iterative_improvement(startMs, setting);
+            FaceLiftingResult rs = face_lifting_iterative_improvement(System.currentTimeMillis(), setting);
             System.out.print("put the face lifting result into queue \n");
             queue.put(rs); // put the result into a queue
         }catch (InterruptedException e){
@@ -286,12 +284,15 @@ public class FaceLifting implements Runnable {
         double stepSize = setting.initialStepSize;
         int dynamics_index = setting.dynamics_index;
         double runTimeRemaining = setting.maxRuntimeMilliseconds;
+        double runTimeAdvance = 0.0;
         boolean safe = true;
         UnsafeSet unsafe_set = setting.unsafe_set;
 
         FaceLiftingResult rs = new FaceLiftingResult();
         Timestamp start_time = new Timestamp(startMs);
         rs.set_start_time(start_time);     // set start time
+        System.out.print("Initial Set \n");
+        setting.initRect.print();
 
         while(runTimeRemaining > 0.0){
 
@@ -355,7 +356,7 @@ public class FaceLifting implements Runnable {
             long current = System.currentTimeMillis();
             long runTimeElapsed = current - startMs;
             System.out.print("runTimeElaped = "+runTimeElapsed +"\n");
-            runTimeRemaining -= runTimeElapsed;
+            runTimeRemaining = setting.maxRuntimeMilliseconds - runTimeElapsed;
             System.out.print("remainingRunTime = "+runTimeRemaining +"\n");
 
             if (runTimeRemaining > 0.0){ // if we still have time, redoing face lifting with a smaller step to get the as good as possible result.

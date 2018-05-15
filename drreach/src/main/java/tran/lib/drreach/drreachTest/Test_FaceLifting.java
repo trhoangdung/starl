@@ -48,9 +48,9 @@ public class Test_FaceLifting {
         BlockingQueue<FaceLiftingResult>  queue = null;
 
         // lifting setting
-        double initialStepSize = 0.001;
+        double initialStepSize = 0.01;
         double reachTime = 1.0;
-        long max_runtime_milliseconds = 10;
+        long max_runtime_milliseconds = 50;
         int dynamics_index = 0; // linear pendulum dynamics
         double max_rect_width_before_error = 100;
 
@@ -67,15 +67,15 @@ public class Test_FaceLifting {
 
         GlobalAnalyzer analyzer = new GlobalAnalyzer(queue_manager);
 
-        FaceLifting Agent1 = new FaceLifting(System.currentTimeMillis(), setting, q1);
-        FaceLifting Agent2 = new FaceLifting(System.currentTimeMillis(), setting, q2);
+        FaceLifting Agent1 = new FaceLifting(setting, q1);
+        FaceLifting Agent2 = new FaceLifting(setting, q2);
 
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         System.out.println("Computing reach set in real-time at : " + new Date());
 
         // execute face-lifting on each agent
-        executor.scheduleAtFixedRate(Agent1, 0, 20, TimeUnit.MILLISECONDS);
-        executor.scheduleAtFixedRate(Agent2, 0, 20, TimeUnit.MILLISECONDS);
+        executor.scheduleAtFixedRate(Agent1, 0, 100, TimeUnit.MILLISECONDS);
+        //executor.scheduleAtFixedRate(Agent2, 0, 100, TimeUnit.MILLISECONDS);
 
         try {
             TimeUnit.SECONDS.sleep(1);
