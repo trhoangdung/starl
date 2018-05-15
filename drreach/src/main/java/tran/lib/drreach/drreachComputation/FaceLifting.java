@@ -1,11 +1,12 @@
 package tran.lib.drreach.drreachComputation;
 
 // FaceLifting Class implements Face-Lifting method
-// Dung Tran: 5/2/2018 LastUpdate: 5/10/2018
+// Dung Tran: 5/2/2018 LastUpdate: 5/15/2018
 // References: 1) Reachability Analysis via Face-Lifting
 //             2) Real-time Reachability Anlysis for Verified Simplex Design
 
 
+import java.sql.Timestamp;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
@@ -71,16 +72,13 @@ public class FaceLifting implements Runnable {
     public void run(){
 
         System.out.print("Doing face-lifting iteratively \n");
-        FaceLiftingResult rs = face_lifting_iterative_improvement(startMs, setting);
-
         try{
+            FaceLiftingResult rs = face_lifting_iterative_improvement(startMs, setting);
             System.out.print("put the face lifting result into queue \n");
             queue.put(rs); // put the result into a queue
-
-        } catch (InterruptedException e){
+        }catch (InterruptedException e){
             e.printStackTrace();
         }
-
     }
 
 
@@ -142,8 +140,6 @@ public class FaceLifting implements Runnable {
         int NUM_DIMS = rect.dim; // number of dimensions
 
         HyperRectangle bloatedRect = rect; // initial rectangle
-        System.out.print("initial rectangle \n");
-        bloatedRect.print();
 
         double[] nebWidth = new double[NUM_FACES]; // an array of nebWidth that used to lift faces (i.e., bloat the rect in all dimensions)
 
@@ -257,9 +253,6 @@ public class FaceLifting implements Runnable {
 
         }
 
-        System.out.print("minNebCrossTime = " +minNebCrossTime + "\n");
-        System.out.print("Bloated Rect \n");
-        bloatedRect.print();
 
         // Lift each face by the minimum time //
 
@@ -277,19 +270,16 @@ public class FaceLifting implements Runnable {
             rect.intervals[d].max += ders[2*d + 1] * timeToElapse;
         }
 
-        System.out.print("rect after lifting \n");
-        rect.print();
-
         if (!bloatedRect.contains(rect, true)){
             throw new java.lang.Error("lifted rect is outside of bloated rect");
         }
-        System.out.print("Time To Elapse = " +timeToElapse +"\n");
+
         SingleLiftingResult rs = new SingleLiftingResult(timeToElapse, rect);
         return rs;
 
     }
 
-    public FaceLiftingResult face_lifting_iterative_improvement(long startMs, LiftingSettings setting){
+    public FaceLiftingResult face_lifting_iterative_improvement (long startMs, LiftingSettings setting){
 
 
         int iter = 0; // number of iteration
@@ -297,10 +287,11 @@ public class FaceLifting implements Runnable {
         int dynamics_index = setting.dynamics_index;
         double runTimeRemaining = setting.maxRuntimeMilliseconds;
         boolean safe = true;
-        HyperRectangle hull = setting.initRect;
+        UnsafeSet unsafe_set = setting.unsafe_set;
+
         FaceLiftingResult rs = new FaceLiftingResult();
-        double start_time = (double) startMs;
-        rs.set_start_time(start_time / 1000.0);     // set start time
+        Timestamp start_time = new Timestamp(startMs);
+        rs.set_start_time(start_time);     // set start time
 
         while(runTimeRemaining > 0.0){
 
@@ -317,10 +308,12 @@ public class FaceLifting implements Runnable {
 
             double reachTimeRemaining = setting.reachTime;
             double reachTimeAdvance = 0.0;
-            HyperRectangle trackedRect = setting.initRect;
-            UnsafeSet unsafe_set = setting.unsafe_set;
 
-            while (safe && reachTimeRemaining > 0){ // do face lifting with current stepSize, check safety at runtime
+
+            HyperRectangle trackedRect = setting.initRect.copy();
+            HyperRectangle hull = setting.initRect.copy();
+
+            while (safe && reachTimeRemaining > 0.0){ // do face lifting with current stepSize, check safety at runtime
 
                 SingleLiftingResult singleRes = lift_single_rect(dynamics_index, trackedRect, stepSize, reachTimeRemaining);
 
@@ -328,39 +321,48 @@ public class FaceLifting implements Runnable {
                 trackedRect = singleRes.trackedRect;
 
                 hull.convex_hull(trackedRect);      // get convex-hull of reachable sets
-                safe = hull.check_intersect(unsafe_set);    // check safety
+                safe = !hull.check_intersect(unsafe_set);    // check safety
 
                 rs.update_stepSize(stepSize); // update step size
                 rs.update_safety(safe); // update safety status
                 rs.update_hull(hull);   // update hull
                 reachTimeAdvance += reachTimeElapsed;
                 rs.update_reach_set(reachTimeAdvance, trackedRect); // update reachable set
+                long reachTimeAdvanceLong = Double.valueOf(reachTimeAdvance*1000.0).longValue();
+                long currentTimeLong = startMs + reachTimeAdvanceLong;
 
                 if (!safe){
-
+                    System.out.print("System is unsafe at time: "+new Timestamp(currentTimeLong)+"\n");
+                    System.out.print("Unsafe Reach Set\n");
+                    trackedRect.print();
                     rs.set_unsafe_rect(trackedRect);
                     rs.set_unsafe_time(reachTimeAdvance);
 
                 }
 
                 reachTimeRemaining -= reachTimeElapsed;
+                System.out.print("reachTimeAdvance = "+reachTimeAdvance+"\n");
+                System.out.print("remainingReachTime = " +reachTimeRemaining + "\n");
+                System.out.print("Reach set at time: " +new Timestamp(currentTimeLong)+"\n");
+                trackedRect.print();
+                System.out.print("Reach set hull from "+new Timestamp(startMs) +" to "+new Timestamp(currentTimeLong) +" = " +"\n");
+                hull.print();
+                rs.set_end_time(new Timestamp(currentTimeLong)); // end time for this faceLifting result
+
             }
 
-            System.out.print("Start Time = " +startMs +"\n");
+
             long current = System.currentTimeMillis();
-            System.out.print("Current Time = " +current +"\n");
             long runTimeElapsed = current - startMs;
             System.out.print("runTimeElaped = "+runTimeElapsed +"\n");
             runTimeRemaining -= runTimeElapsed;
-            System.out.print("Remaining run time = "+runTimeRemaining +"\n");
+            System.out.print("remainingRunTime = "+runTimeRemaining +"\n");
 
             if (runTimeRemaining > 0.0){ // if we still have time, redoing face lifting with a smaller step to get the as good as possible result.
                 stepSize = stepSize / 2.0;
             }
 
         }
-
-        rs.set_valid_time(start_time + setting.reachTime); // valid time for this faceLifting result
 
         return rs;
     }

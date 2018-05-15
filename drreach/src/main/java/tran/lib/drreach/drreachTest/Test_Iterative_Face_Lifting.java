@@ -1,7 +1,7 @@
 package tran.lib.drreach.drreachTest;
 
 // Test Iteratively improved Face Lifting method
-// Dung Tran: 5/14/2018
+// Dung Tran: 5/14/2018 Last update: 5/15/2018
 
 import net.sourceforge.interval.ia_math.RealInterval;
 
@@ -36,7 +36,7 @@ public class Test_Iterative_Face_Lifting {
         BlockingQueue<FaceLiftingResult> queue = null;
 
         // lifting setting
-        double initialStepSize = 0.001;
+        double initialStepSize = 0.1;
         double reachTime = 1.0;
         long max_runtime_milliseconds = 100;
         int dynamics_index = 0; // linear pendulum dynamics
@@ -46,7 +46,11 @@ public class Test_Iterative_Face_Lifting {
 
 
         FaceLifting Agent1 = new FaceLifting(System.currentTimeMillis(), setting, queue);
+
+
         FaceLiftingResult rs = Agent1.face_lifting_iterative_improvement(System.currentTimeMillis(), setting);
+
+
 
     }
 

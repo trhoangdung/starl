@@ -4,14 +4,15 @@ package tran.lib.drreach.drreachComputation;
 // Dung Tran: 5/9/2018 Update: 5/14/2018
 
 import java.util.HashMap;
+import java.sql.Timestamp;
 
 public class FaceLiftingResult {
     public HyperRectangle hull; // convex_hull of all tracked rectangles in face lifting process
     public boolean safe;
     public int iter_num; // iteration number
     public double stepSize_used = 0.0; // the step size currently used to get this result
-    public double startTime; // store the start time when a face lifting method is called. (in seconds)
-    public double validTime; // the time that this face lifting result is valid, validTime = startTime + reachTime (in seconds)
+    public Timestamp startTime; // store the start time when a face lifting method is called. (in seconds)
+    public Timestamp endTime; // the time between startTime and endTime is the valid time for the result
 
     public HashMap<Double, HyperRectangle> reachSets = new HashMap<Double, HyperRectangle>(); // store reachable set overtime
 
@@ -26,12 +27,12 @@ public class FaceLiftingResult {
         this.unsafe_time = unsafe_time;
     }
 
-    public void set_start_time(double start_time){
+    public void set_start_time(Timestamp start_time){
         this.startTime = start_time;
     }
 
-    public void set_valid_time(double valid_time){
-        this.validTime = valid_time;
+    public void set_end_time(Timestamp end_time){
+        this.endTime = end_time;
     }
 
     public void update_hull(HyperRectangle new_hull){

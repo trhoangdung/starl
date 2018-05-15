@@ -20,7 +20,7 @@ public class test_plot_2d {
 
 
         HyperRectangle Rect1 = new HyperRectangle(Interval.vector2intervals(min_vec1, max_vec1));
-        HyperRectangle Rect2 = new HyperRectangle(Interval.vector2intervals(min_vec2,max_vec2));
+        HyperRectangle Rect2 = new HyperRectangle(Interval.vector2intervals(min_vec2, max_vec2));
 
         HyperRectangle[] Rects = {Rect1, Rect2};
 

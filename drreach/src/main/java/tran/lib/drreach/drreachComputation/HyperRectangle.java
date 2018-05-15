@@ -10,11 +10,20 @@ import java.util.Map;
 public class HyperRectangle {
     public Interval[] intervals;
     public int dim;
+    private double[] min_vec;
+    private double[] max_vec;
 
     // constructor
     public HyperRectangle(Interval[] input_intervals){
         this.intervals = input_intervals;
         this.dim = intervals.length;
+        this.min_vec = new double[this.dim];
+        this.max_vec = new double[this.dim];
+        for (int i=0; i< this.dim; i++){
+            this.min_vec[i] = this.intervals[i].min;
+            this.max_vec[i] = this.intervals[i].max;
+        }
+
     }
     // constructor
     public HyperRectangle(int dimensions){
@@ -43,6 +52,17 @@ public class HyperRectangle {
             throw new java.lang.Error("empty HyperRectangle");
         }
 
+    }
+
+    public double[] get_min_vec(){
+        // get min vector
+        return this.min_vec;
+    }
+
+
+    public double[] get_max_vec(){
+        // get max vector
+        return this.max_vec;
     }
 
     public boolean contains(HyperRectangle inside, boolean printErrors){
@@ -141,6 +161,14 @@ public class HyperRectangle {
         }
 
 
+    }
+
+    //copying this object, it is much better than using clone()
+
+    public HyperRectangle copy(){
+
+        HyperRectangle copied_rect = new HyperRectangle(Interval.vector2intervals(this.min_vec, this.max_vec));
+        return copied_rect;
     }
 
 }
