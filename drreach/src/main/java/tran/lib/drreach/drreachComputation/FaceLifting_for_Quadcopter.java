@@ -1,84 +1,19 @@
 package tran.lib.drreach.drreachComputation;
 
-// FaceLifting Class implements Face-Lifting method
-// Dung Tran: 5/2/2018 LastUpdate: 5/22/2018
-// References: 1) Reachability Analysis via Face-Lifting
-//             2) Real-time Reachability Anlysis for Verified Simplex Design
+// This implements face-lifting method specifically for quadcopter,
+// TODO: some part of this code duplicate FaceLifting class, need to improve
+// This is special case where control inputs of quadcopter are time-varying, control inputs is computed from PID controller
+// Dung Tran: 5/22/2018
 
+
+import net.sourceforge.interval.ia_math.RealInterval;
 
 import java.sql.Timestamp;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
 
 import tran.lib.drreach.drreachDynamics.Dynamics_Bounds;
+import tran.lib.drreach.drreachDynamics.Simplified_Quadcopter;
 
-import java.util.concurrent.BlockingDeque;
-
-public class FaceLifting implements Runnable {
-
-    /**
-     * !!!!!!!!!! PLEASE READ THIS IN DETAIL TO SEE HOW REAL-TIME SAFETY VERIFICATION FOR DISTRIBUTED SYSTEMS WORK
-     *
-     * Each agent run faceLifting method locally, it computes forwardly the the reachable set (a convex hull)
-     * from its current time (start-time) to future time an amount of time called reachTime, i.e. [current-time, future-time],
-     * future-time - current-time = reachTime
-     *
-     * The reachable set computation need to be done within an certain amount of time called runTime << reachTime. (this is where
-     * the iteratively improved face-lifting method takes places by changing step-size in doing face-lifting).
-     *
-     * The reachable set (a convex hull) is then put in its given protected queue with a given time-stamp, i.e.,
-     * the time in which the reachable set is valid. The time-stamp is done using the local agent time.
-     *
-     * A central analyzer will read the reachable sets of all agents from all queues and analyze the safety based on distributed reachable set analysis method
-     *
-     * Note that there are mismatches between local times of the agents. Assume that the clock of these agents are synchronized up to some accuracy
-     *
-     * A formal method need to deal with these mismatches to have a formal guarantee about the safety of the distributed system.
-     *
-     */
-
-    /**
-     * The safety of the distributed system is predicted from a global current-time to a global future-time
-     *
-     * This safety checking includes two parts:
-     *
-     * 1) check if an agent reach some obstacles when moving. These obstacles are assumed to be static and immobile.
-     *
-     * This check is done locally by the agent its self since it is assumed to known the locations of the obstacles.
-     * This check is done simultaneously when the agent do face-lifting by checking the intersection between its reach set with unsafe region
-     *
-     * 2) check if agents are collided with each other. This is done by a global (central) analyzer. This global analyzer will
-     * read all reachable set of all agents from their corresponding queues.
-     *
-     * The distributed reach set analysis is done from these reachable sets having time-stamps mismatches.
-     *
-     */
-
-
-
-    LiftingSettings setting;
-    protected BlockingQueue<FaceLiftingResult> queue = null;
-
-    // constructor
-    public FaceLifting(LiftingSettings setting, BlockingQueue<FaceLiftingResult> assigned_queue){
-        this.setting = setting;
-        this.queue = assigned_queue;
-    }
-
-    @Override
-    public void run(){
-
-        System.out.print("Doing face-lifting iteratively \n");
-        try{
-            FaceLiftingResult rs = face_lifting_iterative_improvement(System.currentTimeMillis(), setting);
-            System.out.print("put the face lifting result into queue \n");
-            queue.put(rs); // put the result into a queue
-        }catch (InterruptedException e){
-            e.printStackTrace();
-        }
-    }
-
+public class FaceLifting_for_Quadcopter {
 
     public static HyperRectangle make_neighborhood_rect(HyperRectangle bloatedRect, HyperRectangle originalRect, int f, double nebWidth){
         // Make a neighborhood rectangle based on provided width
@@ -119,19 +54,11 @@ public class FaceLifting implements Runnable {
     double MIN_DER = new ComputationSetting().MIN_DER;
     double DBL_MAX = new ComputationSetting().DBL_MAX;
 
-    public SingleLiftingResult lift_single_rect(int dynamics_index, HyperRectangle rect, double stepsize, double timeRemaining){
+    public SingleLiftingResult lift_single_rect(HyperRectangle rect, double stepsize, double timeRemaining, RealInterval current_pitch, RealInterval current_roll){
+
         // Do a single face lifting operation.
         // !!! Note that this is done for all faces of the hyperRectangle
         // Return time elapsed
-
-        /**
-         * dynamics_index is an input for selecting dynamics
-         * dynamics_index = 0 -> linear pendulum
-         * dynamics_index = 1 -> nonlinear pendulum
-         * dynamics_index = 2 -> iRobot
-         * dynamics_index = 3 -> miniDrone
-         * ...
-         */
 
 
         int NUM_FACES = 2 * rect.dim; // number of faces need to be lifted
@@ -166,8 +93,9 @@ public class FaceLifting implements Runnable {
                 faceNebRect = make_neighborhood_rect(bloatedRect, rect, f, nebWidth[f]);
 
                 // test derivative inside neighborhood;
-                Dynamics_Bounds db = new Dynamics_Bounds();
-                Double der = db.get_dynamics_bounds(dynamics_index, faceNebRect, f);
+                Simplified_Quadcopter db = new Simplified_Quadcopter();
+                double der = db.get_derivative_bounds(faceNebRect, f, current_pitch, current_roll);
+
 
                 //System.out.print("Derivative at face " +f +" = " +der + "\n");
 
@@ -277,7 +205,7 @@ public class FaceLifting implements Runnable {
 
     }
 
-    public FaceLiftingResult face_lifting_iterative_improvement (long startMs, LiftingSettings setting){
+    public FaceLiftingResult face_lifting_iterative_improvement (long startMs, LiftingSettings setting, RealInterval current_pitch, RealInterval current_roll){
 
 
         int iter = 0; // number of iteration
@@ -316,7 +244,7 @@ public class FaceLifting implements Runnable {
 
             while (safe && reachTimeRemaining > 0.0){ // do face lifting with current stepSize, check safety at runtime
 
-                SingleLiftingResult singleRes = lift_single_rect(dynamics_index, trackedRect, stepSize, reachTimeRemaining);
+                SingleLiftingResult singleRes = lift_single_rect(trackedRect, stepSize, reachTimeRemaining, current_pitch, current_roll);
 
                 double reachTimeElapsed = singleRes.timeElapsed;
                 trackedRect = singleRes.trackedRect;

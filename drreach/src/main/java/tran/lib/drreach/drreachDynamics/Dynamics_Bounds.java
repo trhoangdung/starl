@@ -9,8 +9,8 @@ public class Dynamics_Bounds {
         /**
          * dynamics_index: 0 -> Linear Pendulum
          * dynamics_index: 1 -> Non-linear Pendulum
-         * dynamics_index: 2 -> iRobot
-         * dynamics_index: 3 -> miniDrone
+         * dynamics_index: 2 -> not supported yet
+         * dynamics_index: 3 -> not supported yet
          * ...
          */
 
