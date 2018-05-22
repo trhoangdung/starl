@@ -96,6 +96,12 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 				mypos = (Model_quadcopter)gvh.plat.getModel();
 //				System.out.println(mypos.toString());
 				System.out.printf("mypos (%d, %d) \n", mypos.x, mypos.y);
+				System.out.printf("pitch = (%f) \n", mypos.pitch);
+				System.out.printf("roll = (%f) \n", mypos.roll);
+				System.out.printf("yaw = (%f) \n", mypos.yaw);
+				System.out.printf("v_x = %f \n", mypos.v_x);
+				System.out.printf("v_y = %f \n", mypos.v_y);
+
 				System.out.printf("destination (%d, %d) \n", destination.x, destination.y);
 				int distance = (int) Math.sqrt(Math.pow((mypos.x - destination.x),2) + Math.pow((mypos.y - destination.y), 2));
 				System.out.println("distance:" + distance);
@@ -148,7 +154,8 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 							Rroll = Math.asin((Ay_d * Math.cos(Math.toRadians(mypos.yaw)) - Ax_d * Math.sin(Math.toRadians(mypos.yaw))) %1);
 							Rpitch = Math.asin( (-Ay_d * Math.sin(Math.toRadians(mypos.yaw)) - Ax_d * Math.cos(Math.toRadians(mypos.yaw))) / (Math.cos(Rroll)) %1);
 							Rvs = (kpz * (destination.z - mypos.z) - kdz * mypos.v_z);
-						//	System.out.println(Ryaw + " , " + Ryawsp + " , " +  Rroll  + " , " +  Rpitch + " , " + Rvs);
+
+							System.out.println(Ryaw + " , " + Ryawsp + " , " +  Rroll  + " , " +  Rpitch + " , " + Rvs);
 
 							setControlInputRescale(Math.toDegrees(Ryawsp),Math.toDegrees(Rpitch)%360,Math.toDegrees(Rroll)%360,Rvs);
 							//setControlInput(Ryawsp/param.max_yaw_speed, Rpitch%param.max_pitch_roll, Rroll%param.max_pitch_roll, Rvs/param.max_gaz);

@@ -57,6 +57,7 @@ public class drreachApp extends LogicThread {
 	public List<Object> callStarL() {
 		while(true) {
 
+
 			if(gvh.plat.model instanceof Model_quadcopter){
 				gvh.log.i("WIND", ((Model_quadcopter)gvh.plat.model).windxNoise + " " +  ((Model_quadcopter)gvh.plat.model).windyNoise);
 			} else if(gvh.plat.model instanceof Model_GhostAerial){
