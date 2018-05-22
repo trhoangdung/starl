@@ -2,7 +2,6 @@ package tran.lib.drreach.drreachTest;
 
 import tran.lib.drreach.drreachComputation.HyperRectangle;
 import tran.lib.drreach.drreachComputation.Interval;
-import tran.lib.drreach.drreachPlot.Plot;
 
 // See how clone-method work
 //https://javarevisited.blogspot.com/2013/09/how-clone-method-works-in-java.html

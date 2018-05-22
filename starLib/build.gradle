@@ -23,4 +23,6 @@ dependencies {
     compile project(':dJISDKLIB')
     compile project(':ClientLib')
     compile files('libs/EHangAndroidSDK2.0.5.jar')
+    implementation files('libs/ia_math.jar')
+    implementation project(':drreach')
 }

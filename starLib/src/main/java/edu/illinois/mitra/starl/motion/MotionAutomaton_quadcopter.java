@@ -18,6 +18,27 @@ import edu.illinois.mitra.starl.objects.*;
  * @author Yixiao Lin
  * @version 1.0
  */
+
+import net.sourceforge.interval.ia_math.RealInterval;
+
+import java.util.concurrent.BlockingQueue;
+
+import tran.lib.drreach.drreachComputation.ComputationSetting;
+import tran.lib.drreach.drreachComputation.FaceLifting;
+import tran.lib.drreach.drreachComputation.FaceLiftingResult;
+import tran.lib.drreach.drreachComputation.FaceLifting_for_Quadcopter;
+import tran.lib.drreach.drreachComputation.HyperRectangle;
+import tran.lib.drreach.drreachComputation.Interval;
+import tran.lib.drreach.drreachComputation.LiftingSettings;
+import tran.lib.drreach.drreachComputation.SingleLiftingResult;
+import tran.lib.drreach.drreachComputation.UnsafeSet;
+
+/**
+ * This is revised by Dung Tran to implement real-time reachability analysis using face-lifting method
+ * Dung Tran: 5/24/2018
+ */
+
+
 public class MotionAutomaton_quadcopter extends RobotMotion {
 	protected static final String TAG = "MotionAutomaton";
 	protected static final String ERR = "Critical Error";
@@ -102,120 +123,134 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 				System.out.printf("v_x = %f \n", mypos.v_x);
 				System.out.printf("v_y = %f \n", mypos.v_y);
 
+				System.out.print("Computing next 1s reachable set \n");
+				// step 1 : get initial set
+				// step 2 : lifting setting
+				// step 3 : call face lifting
+				// step 4 : display result
+				double noise_percent = 0.01;
+
+				HyperRectangle init_rect = get_init_set(mypos.x, mypos.v_x, mypos.y, mypos.v_y, noise_percent);
+				RealInterval current_pitch = get_current_pitch_set(mypos.pitch, noise_percent);
+				RealInterval current_roll = get_current_roll_set(mypos.roll, noise_percent);
+				LiftingSettings lift_setting = get_lifting_setting(init_rect);
+				FaceLiftingResult rs = call_face_lifting(lift_setting, current_pitch, current_roll);
+
 				System.out.printf("destination (%d, %d) \n", destination.x, destination.y);
 				int distance = (int) Math.sqrt(Math.pow((mypos.x - destination.x),2) + Math.pow((mypos.y - destination.y), 2));
 				System.out.println("distance:" + distance);
 				//int distance = mypos.distanceTo(destination);
 				if(mypos.gaz < -50){
-			//		System.out.println("going down");
+					//		System.out.println("going down");
 				}
 				colliding = (stage != STAGE.LAND && mypos.gaz < -50);
 
 				if(!colliding && stage != null) {
 					switch(stage) {
-					case INIT:
-						if(mode == OPMODE.GO_TO) {
+						case INIT:
+							if(mode == OPMODE.GO_TO) {
+								if(mypos.z < safeHeight){
+									// just a safe distance from ground
+									takeOff();
+									next = STAGE.TAKEOFF;
+								}
+								else{
+									if(distance <= param.GOAL_RADIUS) {
+										System.out.println(">>>Distance: " + distance + " - GOAL_RADIUS " + param.GOAL_RADIUS);
+										next = STAGE.GOAL;
+									}
+									else{
+										next = STAGE.MOVE;
+									}
+								}
+							}
+							break;
+						case MOVE:
 							if(mypos.z < safeHeight){
 								// just a safe distance from ground
 								takeOff();
 								next = STAGE.TAKEOFF;
+								break;
+							}
+							if(distance <= param.GOAL_RADIUS) {
+								System.out.println(">>>Distance: " + distance + " - GOAL_RADIUS " + param.GOAL_RADIUS);
+								next = STAGE.GOAL;
 							}
 							else{
-								if(distance <= param.GOAL_RADIUS) {
-									System.out.println(">>>Distance: " + distance + " - GOAL_RADIUS " + param.GOAL_RADIUS);
-									next = STAGE.GOAL;
-								}
-								else{
-									next = STAGE.MOVE;
-								}
-							}
-						}
-						break;
-					case MOVE:
-						if(mypos.z < safeHeight){
-							// just a safe distance from ground
-							takeOff();
-							next = STAGE.TAKEOFF;
-							break;
-						}
-						if(distance <= param.GOAL_RADIUS) {
-							System.out.println(">>>Distance: " + distance + " - GOAL_RADIUS " + param.GOAL_RADIUS);
-							next = STAGE.GOAL;
-						}
-						else{
-							double Ax_d, Ay_d = 0.0;
-							double Ryaw, Rroll, Rpitch, Rvs, Ryawsp = 0.0;
-							//		System.out.println(destination.x - mypos.x + " , " + mypos.v_x);
-							Ax_d = (kpx * (destination.x - mypos.x) - kdx * mypos.v_x) ;
-							Ay_d = (kpy * (destination.y - mypos.y) - kdy * mypos.v_y) ;
-							Ryaw = Math.atan2(destination.y - mypos.y, destination.x - mypos.x);
-							//Ryaw = Math.atan2((destination.y - mypos.x), (destination.x - mypos.y));
-							Ryawsp = kpz * ((Ryaw - Math.toRadians(mypos.yaw)));
-							Rroll = Math.asin((Ay_d * Math.cos(Math.toRadians(mypos.yaw)) - Ax_d * Math.sin(Math.toRadians(mypos.yaw))) %1);
-							Rpitch = Math.asin( (-Ay_d * Math.sin(Math.toRadians(mypos.yaw)) - Ax_d * Math.cos(Math.toRadians(mypos.yaw))) / (Math.cos(Rroll)) %1);
-							Rvs = (kpz * (destination.z - mypos.z) - kdz * mypos.v_z);
+								double Ax_d, Ay_d = 0.0;
+								double Ryaw, Rroll, Rpitch, Rvs, Ryawsp = 0.0;
+								//		System.out.println(destination.x - mypos.x + " , " + mypos.v_x);
+								Ax_d = (kpx * (destination.x - mypos.x) - kdx * mypos.v_x) ;
+								Ay_d = (kpy * (destination.y - mypos.y) - kdy * mypos.v_y) ;
+								Ryaw = Math.atan2(destination.y - mypos.y, destination.x - mypos.x);
+								//Ryaw = Math.atan2((destination.y - mypos.x), (destination.x - mypos.y));
+								Ryawsp = kpz * ((Ryaw - Math.toRadians(mypos.yaw)));
+								Rroll = Math.asin((Ay_d * Math.cos(Math.toRadians(mypos.yaw)) - Ax_d * Math.sin(Math.toRadians(mypos.yaw))) %1);
+								Rpitch = Math.asin( (-Ay_d * Math.sin(Math.toRadians(mypos.yaw)) - Ax_d * Math.cos(Math.toRadians(mypos.yaw))) / (Math.cos(Rroll)) %1);
+								Rvs = (kpz * (destination.z - mypos.z) - kdz * mypos.v_z);
 
-							System.out.println(Ryaw + " , " + Ryawsp + " , " +  Rroll  + " , " +  Rpitch + " , " + Rvs);
+								System.out.println(Ryaw + " , " + Ryawsp + " , " +  Rroll  + " , " +  Rpitch + " , " + Rvs);
+								//System.out.print("Rpitch = "+Rpitch + "\n");
+								//System.out.print("Rroll = "+Rroll + "\n");
 
-							setControlInputRescale(Math.toDegrees(Ryawsp),Math.toDegrees(Rpitch)%360,Math.toDegrees(Rroll)%360,Rvs);
-							//setControlInput(Ryawsp/param.max_yaw_speed, Rpitch%param.max_pitch_roll, Rroll%param.max_pitch_roll, Rvs/param.max_gaz);
-							//next = STAGE.INIT;
-						}
-						break;
-					case HOVER:
-						setControlInput(0,0,0, 0);
-						// do nothing
-						break;
-					case TAKEOFF:
-						switch(mypos.z/(safeHeight/2)){
-						case 0:// 0 - 1/2 safeHeight
-							setControlInput(0,0,0,1);
-							break;
-						case 1: // 1/2- 1 safeHeight
-							setControlInput(0,0,0, 0.5);
-							break;
-						default: // above safeHeight:
-							hover();
-							if(prev != null){
-								next = prev;
+								setControlInputRescale(Math.toDegrees(Ryawsp),Math.toDegrees(Rpitch)%360,Math.toDegrees(Rroll)%360,Rvs);
+
 							}
-							else{
+							break;
+						case HOVER:
+							setControlInput(0,0,0, 0);
+							// do nothing
+							break;
+						case TAKEOFF:
+							switch(mypos.z/(safeHeight/2)){
+								case 0:// 0 - 1/2 safeHeight
+									setControlInput(0,0,0,1);
+									break;
+								case 1: // 1/2- 1 safeHeight
+									setControlInput(0,0,0, 0.5);
+									break;
+								default: // above safeHeight:
+									hover();
+									if(prev != null){
+										next = prev;
+									}
+									else{
+										next = STAGE.HOVER;
+									}
+									break;
+							}
+							break;
+						case LAND:
+							switch(mypos.z/(safeHeight/2)){
+								case 0:// 0 - 1/2 safeHeight
+									setControlInput(0,0,0,0);
+									next = STAGE.STOP;
+									break;
+								case 1: // 1/2- 1 safeHeight
+									setControlInput(0,0,0, -0.05);
+									break;
+								default:   // above safeHeight
+									setControlInput(0,0,0,-0.5);
+									break;
+							}
+							break;
+						case GOAL:
+							System.out.println("Done flag");
+							done = true;
+							gvh.log.i(TAG, "At goal!");
+							gvh.log.i("DoneFlag", "write");
+							if(param.STOP_AT_DESTINATION){
+								hover();
 								next = STAGE.HOVER;
 							}
+							running = false;
+							inMotion = false;
 							break;
-						}
-						break;
-					case LAND:
-						switch(mypos.z/(safeHeight/2)){
-						case 0:// 0 - 1/2 safeHeight
-							setControlInput(0,0,0,0);
-							next = STAGE.STOP;
-							break;
-						case 1: // 1/2- 1 safeHeight
-							setControlInput(0,0,0, -0.05);
-							break;
-						default:   // above safeHeight
-							setControlInput(0,0,0,-0.5);
-							break;
-						}
-						break;
-					case GOAL:
-						System.out.println("Done flag");
-						done = true;
-						gvh.log.i(TAG, "At goal!");
-						gvh.log.i("DoneFlag", "write");
-						if(param.STOP_AT_DESTINATION){
-							hover();
-							next = STAGE.HOVER;
-						}
-						running = false;
-						inMotion = false;
-						break;
-					case STOP:
-						gvh.log.i("FailFlag", "write");
-						System.out.println("STOP");
-						motion_stop();
-						//do nothing
+						case STOP:
+							gvh.log.i("FailFlag", "write");
+							System.out.println("STOP");
+							motion_stop();
+							//do nothing
 					}
 					if(next != null) {
 						prev = stage;
@@ -232,11 +267,12 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 					gvh.log.i("FailFlag", "write");
 					done = false;
 					motion_stop();
-				//	land();
-				//	stage = STAGE.LAND;
+					//	land();
+					//	stage = STAGE.LAND;
 				}
 			}
 			gvh.sleep(param.AUTOMATON_PERIOD);
+			//gvh.sleep(200);
 		}
 	}
 
@@ -300,7 +336,7 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 			throw new IllegalArgumentException("gaz, vertical speed must be between -1 to 1");
 		}
 		//Bluetooth command to control the drone
-	//	gvh.log.i(TAG, "control input as, yaw, pitch, roll, thrust " + yaw_v + ", " + pitch + ", " +roll + ", " +gaz);
+		//	gvh.log.i(TAG, "control input as, yaw, pitch, roll, thrust " + yaw_v + ", " + pitch + ", " +roll + ", " +gaz);
 		/*
 		if(running) {
 			if(velocity != 0) {
@@ -372,4 +408,92 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 		this.turnspeed = (param.TURNSPEED_MAX - param.TURNSPEED_MIN) / (param.SLOWTURN_ANGLE - param.SMALLTURN_ANGLE);
 	}
 	 */
+
+	// ---------------------------------------------------------------------------------------//
+	// --------------------------------------------------------------------------------------//
+	// ------------- THIS FOR REACHABLE SET COMPUTATION USING FACE-LIFTING METHOD ----------//
+	// DUNG TRAN: 5/22/2018
+
+	private HyperRectangle get_init_set(double x, double v_x, double y, double v_y, double noise_percent){
+		// create initial set for reachable set computation using face-lifting method
+		// Dung Tran: 5/22/2018
+		// @input: current position x, y and current velocities v_x, v_y
+		// @input: noise assumed in the sensor inputs due to noise or delays
+		// For example, the real position x is in this range: [x - noise_percent * abs(x), x + noise_percent * abs(x)]
+
+		double[] min_vec = {x - noise_percent * Math.abs(x), v_x - noise_percent * Math.abs(v_x), y - noise_percent * Math.abs(y), v_y - noise_percent * Math.abs(v_y)};
+		double[] max_vec = {x + noise_percent * Math.abs(x), v_x + noise_percent * Math.abs(v_x), y + noise_percent * Math.abs(y), v_y + noise_percent * Math.abs(v_y)};
+
+		HyperRectangle init_set = new HyperRectangle(Interval.vector2intervals(min_vec, max_vec));
+
+		return init_set;
+	}
+
+	private RealInterval get_current_pitch_set(double pitch, double noise_percent){
+		// get current pitch interval for computing reachable set using face-lifting method
+		// Dung Tran: 5/22/2018
+
+		RealInterval pitch_set;
+		if (pitch > 0 || pitch < 0){
+			pitch_set = new RealInterval(pitch - noise_percent * Math.abs(pitch), pitch + noise_percent * Math.abs(pitch));
+		}
+		else{
+			pitch_set = new RealInterval(0);
+		}
+
+		return pitch_set;
+	}
+
+	private RealInterval get_current_roll_set(double roll, double noise_percent){
+		// get current roll interval for computing reachable set using face-lifting method
+		// Dung Tran: 5/22/2018
+
+		RealInterval roll_set;
+		if (roll > 0 || roll < 0){
+			roll_set = new RealInterval(roll - noise_percent * Math.abs(roll), roll + noise_percent * Math.abs(roll));
+		}
+		else{
+			roll_set = new RealInterval(0);
+		}
+
+		return roll_set;
+
+	}
+	private LiftingSettings get_lifting_setting(HyperRectangle init_rect){
+		// setting for face-lifting method
+		// Dung Tran: 5/22/2018
+		double initialStepSize = 0.01;
+		double reachTime = 1.0;
+		long max_runtime_milliseconds = 5;
+		int dynamics_index = 0; // linear pendulum dynamics
+		double max_rect_width_before_error = 100;
+
+		// unsafe set: v_x <= 500, [x, v_x, y, v_y]^T
+
+		ComputationSetting cs = new ComputationSetting();
+		Double NegInfinity = cs.DBL_MIN;
+		Double PosInfinity = cs.DBL_MAX;
+		RealInterval velocity_const = new RealInterval(NegInfinity, 500.0);
+		UnsafeSet unsafe_set = new UnsafeSet(1, velocity_const);
+
+		LiftingSettings setting = new LiftingSettings(init_rect, reachTime, initialStepSize, max_rect_width_before_error, max_runtime_milliseconds, dynamics_index, unsafe_set);
+
+		return setting;
+	}
+
+	private FaceLiftingResult call_face_lifting(LiftingSettings setting, RealInterval current_pitch, RealInterval current_roll){
+		// call face-lifting method
+		// Dung Tran: 5/22/2018
+
+		FaceLifting_for_Quadcopter FL = new FaceLifting_for_Quadcopter();
+		FaceLiftingResult rs = FL.face_lifting_iterative_improvement(System.currentTimeMillis(), setting, current_pitch, current_roll);
+		return rs;
+
+	}
+
+	private void display_reach_set(FaceLiftingResult rs){
+
+		System.out.print("Reachable set results\n");
+	}
+
 }

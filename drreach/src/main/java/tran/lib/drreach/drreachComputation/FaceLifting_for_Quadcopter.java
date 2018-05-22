@@ -96,8 +96,7 @@ public class FaceLifting_for_Quadcopter {
                 Simplified_Quadcopter db = new Simplified_Quadcopter();
                 double der = db.get_derivative_bounds(faceNebRect, f, current_pitch, current_roll);
 
-
-                //System.out.print("Derivative at face " +f +" = " +der + "\n");
+                System.out.print("Derivative at face " +f +" = " +der + "\n");
 
                 if (der > MAX_DER){
                     der = MAX_DER;
@@ -175,6 +174,8 @@ public class FaceLifting_for_Quadcopter {
 
         if (minNebCrossTime * 2 < stepsize){
 
+            System.out.print("MinNebCrossTime = " +minNebCrossTime + "\n");
+
             throw new java.lang.Error("minNebCrossTime is less than half of step size");
 
         }
@@ -231,9 +232,9 @@ public class FaceLifting_for_Quadcopter {
             rs.reset_reach_set();   // reset the reachable set to store the new reachable set using new stepSize
             safe = true;
 
-            if (stepSize < 0.0000001){
-                throw new java.lang.Error("Step size is too small");
-            }
+            //if (stepSize < 0.0000001){
+            //    throw new java.lang.Error("Step size is too small");
+            //}
 
             double reachTimeRemaining = setting.reachTime;
             double reachTimeAdvance = 0.0;

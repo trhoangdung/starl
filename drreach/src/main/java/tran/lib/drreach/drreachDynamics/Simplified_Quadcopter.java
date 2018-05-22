@@ -49,7 +49,16 @@ public class Simplified_Quadcopter {
             }
             else if (dim == 1){ // v_x' = 9.81 * tan(pitch)
 
-                rv = IAMath.mul(new RealInterval(9.81), IAMath.tan(current_pitch));
+                System.out.printf("current pitch = (%f, %f) \n", current_pitch.lo(), current_pitch.hi());
+                RealInterval test_tan = IAMath.tan(current_pitch);
+                System.out.printf("tan(pitch) = (%f, %f)\n", test_tan.lo(), test_tan.hi());
+                //RealInterval test1 = new RealInterval(-1, 1);
+                //rv = IAMath.mul(new RealInterval(9.81), test1);
+                //rv = IAMath.mul(new RealInterval(9.81), test_tan);
+                //rv = IAMath.mul(new RealInterval(9.81), test_tan);
+                //rv = IAMath.mul(new RealInterval(9.81), IAMath.tan(current_pitch));
+                rv = new RealInterval(0.1);
+                System.out.print("dim = 1, rv.lo = " +rv.lo() + " and rv.hi = " +rv.hi() + "\n");
 
             }
             else if (dim == 2){ // y' = v_y
@@ -57,7 +66,8 @@ public class Simplified_Quadcopter {
             }
             else if (dim == 3){ // v_y' = 9.81 * tan(roll) / cos(pitch)
 
-                rv = IAMath.mul(new RealInterval(9.81), IAMath.div(IAMath.tan(current_roll), IAMath.cos(current_pitch)));
+                rv = new RealInterval(0.1);
+                //rv = IAMath.mul(new RealInterval(9.81), IAMath.div(IAMath.tan(current_roll), IAMath.cos(current_pitch)));
             }
 
         }
