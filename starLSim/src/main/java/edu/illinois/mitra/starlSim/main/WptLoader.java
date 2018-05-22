@@ -20,7 +20,18 @@ public final class WptLoader {
         }else{
 
             try {
-                in = new BufferedReader(new FileReader("waypoints\\" + file));
+            	File file_test = new File("hello.txt");
+            	try {
+					if (file_test.createNewFile()) {
+						System.out.print("File is created\n");
+					}
+				}catch(IOException e){
+            		System.out.print(e.getMessage());
+				}
+            	System.out.print("Tran test here \n");
+            	System.out.println(file_test.getAbsolutePath());
+
+                in = new BufferedReader(new FileReader(file));
 
             } catch (FileNotFoundException e) {
                 System.err.println("File " + file + " not found! No waypoints loaded.");

@@ -1,4 +1,4 @@
-package tran.lib.drreach.drreachApps.one_drone_go_to_waypoints;
+package tran.lib.drreach.drreachApps.raceApp;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -11,16 +11,15 @@ import edu.illinois.mitra.starl.objects.ObstacleList;
 import edu.illinois.mitra.starl.objects.Obstacles;
 import edu.illinois.mitra.starl.objects.Point3d;
 import edu.illinois.mitra.starlSim.draw.Drawer;
-import tran.lib.drreach.drreachApp;
 
-public class one_drone_go_to_waypoints_drawer extends Drawer {
+public class RaceDrawer extends Drawer {
 
 	private Stroke stroke = new BasicStroke(8);
 	private Color selectColor = new Color(0,0,255,100);
 	
 	@Override
 	public void draw(LogicThread lt, Graphics2D g) {
-		one_drone_go_to_waypoints app = (one_drone_go_to_waypoints) lt;
+		RaceApp app = (RaceApp) lt;
 
 		g.setColor(Color.RED);
 		

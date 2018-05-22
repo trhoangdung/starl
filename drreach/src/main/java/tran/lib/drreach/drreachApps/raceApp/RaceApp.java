@@ -1,4 +1,4 @@
-package tran.lib.drreach;
+package tran.lib.drreach.drreachApps.raceApp;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +17,7 @@ import edu.illinois.mitra.starl.objects.ItemPosition;
 import edu.illinois.mitra.starl.objects.ObstacleList;
 import edu.illinois.mitra.starl.objects.PositionList;
 
-public class drreachApp extends LogicThread {
+public class RaceApp extends LogicThread {
 	private static final boolean RANDOM_DESTINATION = false;
 	public static final int ARRIVED_MSG = 22;
 
@@ -34,7 +34,7 @@ public class drreachApp extends LogicThread {
 
 	private Stage stage = Stage.PICK;
 
-	public drreachApp(GlobalVarHolder gvh) {
+	public RaceApp(GlobalVarHolder gvh) {
 		super(gvh);
 		MotionParameters.Builder settings = new MotionParameters.Builder();
 //		settings.ROBOT_RADIUS(400);
@@ -43,12 +43,10 @@ public class drreachApp extends LogicThread {
 		MotionParameters param = settings.build();
 
 		gvh.plat.moat.setParameters(param);
-		//for(ItemPosition i : gvh.gps.getWaypointPositions()){
-		//	destinations.put(i.getName(), i);
-		//	destinationsHistory.update(i);
-		//}
-		ItemPosition des = new ItemPosition("des", 200, 300);
-		destinations.put("destination", des);
+		for(ItemPosition i : gvh.gps.getWaypointPositions()){
+			destinations.put(i.getName(), i);
+			destinationsHistory.update(i);
+		}
 		gvh.comms.addMsgListener(this, ARRIVED_MSG);
 		obs = gvh.gps.getObspointPositions();
 	}
@@ -56,7 +54,11 @@ public class drreachApp extends LogicThread {
 	@Override
 	public List<Object> callStarL() {
 		while(true) {
-
+			///Model_quadcopter log_p = (Model_quadcopter) gvh.gps.getMyPosition();
+			///gvh.log.i("POSITION", log_p.name + " " + log_p.x  + " " +log_p.y  + " " +log_p.z  + " " +log_p.yaw  + " " +log_p.pitch  + " " +log_p.roll  + " " +log_p.gaz);
+			//gvh.log.i("POSITION", gvh.gps.getMyPosition().toString());
+			//	Model_iRobot log_p = (Model_iRobot) gvh.gps.getMyPosition();
+			//	gvh.log.i("POSITION", log_p.name + " " + log_p.x  + " " +log_p.y  + " " +log_p.z  + " " +log_p.angle);
 
 			if(gvh.plat.model instanceof Model_quadcopter){
 				gvh.log.i("WIND", ((Model_quadcopter)gvh.plat.model).windxNoise + " " +  ((Model_quadcopter)gvh.plat.model).windyNoise);
