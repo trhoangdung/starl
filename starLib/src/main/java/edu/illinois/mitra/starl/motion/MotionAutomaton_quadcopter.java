@@ -123,19 +123,6 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 				System.out.printf("v_x = %f \n", mypos.v_x);
 				System.out.printf("v_y = %f \n", mypos.v_y);
 
-				System.out.print("Computing next 1s reachable set \n");
-				// step 1 : get initial set
-				// step 2 : lifting setting
-				// step 3 : call face lifting
-				// step 4 : display result
-				double noise_percent = 0.01;
-
-				HyperRectangle init_rect = get_init_set(mypos.x, mypos.v_x, mypos.y, mypos.v_y, noise_percent);
-				RealInterval current_pitch = get_current_pitch_set(mypos.pitch, noise_percent);
-				RealInterval current_roll = get_current_roll_set(mypos.roll, noise_percent);
-				LiftingSettings lift_setting = get_lifting_setting(init_rect);
-				FaceLiftingResult rs = call_face_lifting(lift_setting, current_pitch, current_roll);
-
 				System.out.printf("destination (%d, %d) \n", destination.x, destination.y);
 				int distance = (int) Math.sqrt(Math.pow((mypos.x - destination.x),2) + Math.pow((mypos.y - destination.y), 2));
 				System.out.println("distance:" + distance);
@@ -271,6 +258,20 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 					//	stage = STAGE.LAND;
 				}
 			}
+
+			System.out.print("Computing next 1s reachable set \n");
+			// step 1 : get initial set
+			// step 2 : lifting setting
+			// step 3 : call face lifting
+			// step 4 : display result
+			double noise_percent = 0.01;
+			if(stage == STAGE.MOVE){
+
+				HyperRectangle init_rect = get_init_set(mypos.x, mypos.v_x, mypos.y, mypos.v_y, noise_percent);
+				LiftingSettings lift_setting = get_lifting_setting(init_rect);
+				FaceLiftingResult rs = call_face_lifting(lift_setting, mypos.pitch, mypos.roll);
+			}
+
 			gvh.sleep(param.AUTOMATON_PERIOD);
 			//gvh.sleep(200);
 		}
@@ -429,32 +430,20 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 		return init_set;
 	}
 
-	private RealInterval get_current_pitch_set(double pitch, double noise_percent){
+	private RealInterval get_current_pitch_set(double pitch){
 		// get current pitch interval for computing reachable set using face-lifting method
 		// Dung Tran: 5/22/2018
 
-		RealInterval pitch_set;
-		if (pitch > 0 || pitch < 0){
-			pitch_set = new RealInterval(pitch - noise_percent * Math.abs(pitch), pitch + noise_percent * Math.abs(pitch));
-		}
-		else{
-			pitch_set = new RealInterval(0);
-		}
+		RealInterval pitch_set = new RealInterval(pitch);
 
 		return pitch_set;
 	}
 
-	private RealInterval get_current_roll_set(double roll, double noise_percent){
+	private RealInterval get_current_roll_set(double roll){
 		// get current roll interval for computing reachable set using face-lifting method
 		// Dung Tran: 5/22/2018
 
-		RealInterval roll_set;
-		if (roll > 0 || roll < 0){
-			roll_set = new RealInterval(roll - noise_percent * Math.abs(roll), roll + noise_percent * Math.abs(roll));
-		}
-		else{
-			roll_set = new RealInterval(0);
-		}
+		RealInterval roll_set = new RealInterval(roll);
 
 		return roll_set;
 
@@ -481,7 +470,7 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 		return setting;
 	}
 
-	private FaceLiftingResult call_face_lifting(LiftingSettings setting, RealInterval current_pitch, RealInterval current_roll){
+	private FaceLiftingResult call_face_lifting(LiftingSettings setting, double current_pitch, double current_roll){
 		// call face-lifting method
 		// Dung Tran: 5/22/2018
 

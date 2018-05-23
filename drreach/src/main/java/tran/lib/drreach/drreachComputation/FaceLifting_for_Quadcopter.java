@@ -54,7 +54,7 @@ public class FaceLifting_for_Quadcopter {
     double MIN_DER = new ComputationSetting().MIN_DER;
     double DBL_MAX = new ComputationSetting().DBL_MAX;
 
-    public SingleLiftingResult lift_single_rect(HyperRectangle rect, double stepsize, double timeRemaining, RealInterval current_pitch, RealInterval current_roll){
+    public SingleLiftingResult lift_single_rect(HyperRectangle rect, double stepsize, double timeRemaining, double current_pitch, double current_roll){
 
         // Do a single face lifting operation.
         // !!! Note that this is done for all faces of the hyperRectangle
@@ -96,7 +96,7 @@ public class FaceLifting_for_Quadcopter {
                 Simplified_Quadcopter db = new Simplified_Quadcopter();
                 double der = db.get_derivative_bounds(faceNebRect, f, current_pitch, current_roll);
 
-                System.out.print("Derivative at face " +f +" = " +der + "\n");
+                //System.out.print("Derivative at face " +f +" = " +der + "\n");
 
                 if (der > MAX_DER){
                     der = MAX_DER;
@@ -206,7 +206,7 @@ public class FaceLifting_for_Quadcopter {
 
     }
 
-    public FaceLiftingResult face_lifting_iterative_improvement (long startMs, LiftingSettings setting, RealInterval current_pitch, RealInterval current_roll){
+    public FaceLiftingResult face_lifting_iterative_improvement (long startMs, LiftingSettings setting, double current_pitch, double current_roll){
 
 
         int iter = 0; // number of iteration
