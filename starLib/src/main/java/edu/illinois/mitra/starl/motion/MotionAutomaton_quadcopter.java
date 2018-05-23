@@ -259,17 +259,20 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 				}
 			}
 
-			System.out.print("Computing next 1s reachable set \n");
-			// step 1 : get initial set
-			// step 2 : lifting setting
-			// step 3 : call face lifting
-			// step 4 : display result
-			double noise_percent = 0.01;
-			if(stage == STAGE.MOVE){
+			if (stage == STAGE.MOVE){
+
+				System.out.print("Computing next 1s reachable set for " +gvh.id.getName() + "\n");
+				// step 1 : get initial set
+				// step 2 : lifting setting
+				// step 3 : call face lifting
+				// step 4 : display result
+				double noise_percent = 0.01;
+
 
 				HyperRectangle init_rect = get_init_set(mypos.x, mypos.v_x, mypos.y, mypos.v_y, noise_percent);
 				LiftingSettings lift_setting = get_lifting_setting(init_rect);
 				FaceLiftingResult rs = call_face_lifting(lift_setting, mypos.pitch, mypos.roll);
+
 			}
 
 			gvh.sleep(param.AUTOMATON_PERIOD);

@@ -1,6 +1,6 @@
 
 
-include ':starLib', ':ClientLib', ':Mavlink', ':drreach'
+include ':starLib', ':ClientLib', ':Mavlink', ':drreach', ':followapp_different_mission', ':drreachapps'
 include ':starlTemplate'
 include ':followApp'
 include ':dJISDKLIB'

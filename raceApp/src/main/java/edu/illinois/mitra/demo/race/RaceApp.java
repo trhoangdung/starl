@@ -45,22 +45,28 @@ public class RaceApp extends LogicThread {
 		MotionParameters param = settings.build();
 
 		gvh.plat.moat.setParameters(param);
-		for(ItemPosition i : gvh.gps.getWaypointPositions()){
-			destinations.put(i.getName(), i);
-			destinationsHistory.update(i);
-		}
+
+
 		gvh.comms.addMsgListener(this, ARRIVED_MSG);
 		obs = gvh.gps.getObspointPositions();
 	}
 
 	@Override
 	public List<Object> callStarL() {
+
+		for(ItemPosition i : gvh.gps.getWaypointPositions()){
+			if(gvh.id.getName().equals("quadcopter0") && (i.getName().equals("A") || i.getName().equals("B"))){
+				destinations.put(i.getName(), i);
+				destinationsHistory.update(i);
+			}
+			else if(gvh.id.getName().equals("quadcopter1") && (i.getName().equals("C") || i.getName().equals("D"))){
+				destinations.put(i.getName(), i);
+				destinationsHistory.update(i);
+			}
+
+		}
 		while(true) {
-			///Model_quadcopter log_p = (Model_quadcopter) gvh.gps.getMyPosition();
-			///gvh.log.i("POSITION", log_p.name + " " + log_p.x  + " " +log_p.y  + " " +log_p.z  + " " +log_p.yaw  + " " +log_p.pitch  + " " +log_p.roll  + " " +log_p.gaz);
-			//gvh.log.i("POSITION", gvh.gps.getMyPosition().toString());
-			//	Model_iRobot log_p = (Model_iRobot) gvh.gps.getMyPosition();
-			//	gvh.log.i("POSITION", log_p.name + " " + log_p.x  + " " +log_p.y  + " " +log_p.z  + " " +log_p.angle);
+
 
 			if(gvh.plat.model instanceof Model_quadcopter){
 				gvh.log.i("WIND", ((Model_quadcopter)gvh.plat.model).windxNoise + " " +  ((Model_quadcopter)gvh.plat.model).windyNoise);

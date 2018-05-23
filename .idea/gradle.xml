@@ -12,7 +12,9 @@
             <option value="$PROJECT_DIR$/Mavlink" />
             <option value="$PROJECT_DIR$/dJISDKLIB" />
             <option value="$PROJECT_DIR$/drreach" />
+            <option value="$PROJECT_DIR$/drreachapps" />
             <option value="$PROJECT_DIR$/followApp" />
+            <option value="$PROJECT_DIR$/followapp_different_mission" />
             <option value="$PROJECT_DIR$/raceApp" />
             <option value="$PROJECT_DIR$/starLSim" />
             <option value="$PROJECT_DIR$/starLib" />
