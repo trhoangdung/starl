@@ -479,7 +479,8 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 		// Dung Tran: 5/22/2018
 
 		FaceLifting_for_Quadcopter FL = new FaceLifting_for_Quadcopter();
-		FaceLiftingResult rs = FL.face_lifting_iterative_improvement(System.currentTimeMillis(), setting, current_pitch, current_roll);
+		long time_offset_between_gvh_and_system_time = gvh.time() - System.currentTimeMillis(); // This is due to simulation time is different from system current time
+		FaceLiftingResult rs = FL.face_lifting_iterative_improvement(System.currentTimeMillis(), time_offset_between_gvh_and_system_time , setting, current_pitch, current_roll);
 		return rs;
 
 	}

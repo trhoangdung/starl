@@ -9,6 +9,7 @@ package edu.illinois.mitra.starl.drreach.drreachComputation;
 import java.sql.Timestamp;
 
 import edu.illinois.mitra.starl.drreach.drreachDynamics.Simplified_Quadcopter;
+import edu.illinois.mitra.starl.gvh.GlobalVarHolder;
 
 public class FaceLifting_for_Quadcopter {
 
@@ -203,7 +204,7 @@ public class FaceLifting_for_Quadcopter {
 
     }
 
-    public FaceLiftingResult face_lifting_iterative_improvement (long startMs, LiftingSettings setting, double current_pitch, double current_roll){
+    public FaceLiftingResult face_lifting_iterative_improvement (long startMs, long time_offset_between_gvh_and_system, LiftingSettings setting, double current_pitch, double current_roll){
 
 
         int iter = 0; // number of iteration
@@ -215,7 +216,7 @@ public class FaceLifting_for_Quadcopter {
         UnsafeSet unsafe_set = setting.unsafe_set;
 
         FaceLiftingResult rs = new FaceLiftingResult();
-        Timestamp start_time = new Timestamp(startMs);
+        Timestamp start_time = new Timestamp(startMs + time_offset_between_gvh_and_system);
         rs.set_start_time(start_time);     // set start time
         //System.out.print("Initial Set \n");
         //setting.initRect.print();
@@ -257,7 +258,7 @@ public class FaceLifting_for_Quadcopter {
                 reachTimeAdvance += reachTimeElapsed;
                 rs.update_reach_set(reachTimeAdvance, trackedRect); // update reachable set
                 long reachTimeAdvanceLong = Double.valueOf(reachTimeAdvance*1000.0).longValue();
-                long currentTimeLong = startMs + reachTimeAdvanceLong;
+                long currentTimeLong = startMs + time_offset_between_gvh_and_system + reachTimeAdvanceLong;
 
                 if (!safe){
                     //System.out.print("System violate its local safety specification at time: "+new Timestamp(currentTimeLong)+"\n");
