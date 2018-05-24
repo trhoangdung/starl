@@ -20,10 +20,9 @@ import edu.illinois.mitra.starl.models.Model_quadcopter;
 import edu.illinois.mitra.starl.motion.MotionParameters;
 import edu.illinois.mitra.starl.motion.MotionParameters.COLAVOID_MODE_TYPE;
 import edu.illinois.mitra.starl.objects.ItemPosition;
-import tran.lib.drreach.drreachComputation.FaceLiftingResult;
-import tran.lib.drreach.drreachComputation.HyperRectangle;
-import tran.lib.drreach.drreachComputation.Interval;
-
+import edu.illinois.mitra.starl.drreach.drreachComputation.FaceLiftingResult;
+import edu.illinois.mitra.starl.drreach.drreachComputation.HyperRectangle;
+import edu.illinois.mitra.starl.drreach.drreachComputation.Interval;
 
 public class two_quadcopters_searching_mission_app extends LogicThread {
     private static final String TAG = "Follow App";
@@ -167,6 +166,8 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
             System.out.print("Reach set of "+m.getFrom() +":\n");
             rs.hull.print();
             System.out.print("This reach set is valid from "+rs.startTime.getTime() + " to " +rs.endTime.getTime() +"\n");
+            System.out.print("Local time of "+gvh.id.getName() +" is " +gvh.time() +"\n");
+            System.out.printf("Time mismatch are " +Long.toString(rs.startTime.getTime()-gvh.time()) + " and " +Long.toString(rs.endTime.getTime()-gvh.time()) +"\n");
         }
 
     }

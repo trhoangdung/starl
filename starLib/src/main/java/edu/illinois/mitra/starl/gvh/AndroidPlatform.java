@@ -3,7 +3,8 @@ package edu.illinois.mitra.starl.gvh;
 import edu.illinois.mitra.starl.interfaces.TrackedRobot;
 import edu.illinois.mitra.starl.motion.ReachAvoid;
 import edu.illinois.mitra.starl.motion.RobotMotion;
-import tran.lib.drreach.drreachComputation.FaceLiftingResult;
+import edu.illinois.mitra.starl.drreach.drreachComputation.FaceLiftingResult;
+//import tran.lib.drreach.drreachComputation.FaceLiftingResult;
 
 /**
  * Stub class implementing platform specific methods.

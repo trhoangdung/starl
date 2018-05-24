@@ -8,7 +8,7 @@ import edu.illinois.mitra.starl.objects.ItemPosition;
 import edu.illinois.mitra.starl.objects.ObstacleList;
 import edu.illinois.mitra.starl.objects.Point3d;
 import edu.illinois.mitra.starl.objects.PositionList;
-import tran.lib.drreach.drreachComputation.FaceLiftingResult;
+import edu.illinois.mitra.starl.drreach.drreachComputation.FaceLiftingResult;
 
 /**
  * This class represents a simple model of the quadcopter
