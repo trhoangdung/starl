@@ -8,6 +8,8 @@ import edu.illinois.mitra.starl.objects.ItemPosition;
 import edu.illinois.mitra.starl.objects.ObstacleList;
 import edu.illinois.mitra.starl.objects.Point3d;
 import edu.illinois.mitra.starl.objects.PositionList;
+import tran.lib.drreach.drreachComputation.FaceLiftingResult;
+
 /**
  * This class represents a simple model of the quadcopter
  * @author Yixiao Lin
@@ -71,6 +73,7 @@ public class Model_quadcopter extends ItemPosition implements TrackedRobot{
 	public double windt = 0;
 	public double windxNoise;
 	public double windyNoise;
+
 
 	/**
 	 * Construct an Model_quadcopter from a received GPS broadcast message

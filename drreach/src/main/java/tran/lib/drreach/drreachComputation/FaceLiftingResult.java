@@ -64,4 +64,28 @@ public class FaceLiftingResult {
     public void update_stepSize(double current_stepSize){
         this.stepSize_used = current_stepSize;
     }
+
+    public String[] messageEncoder(){
+
+        // Encode the face-lifting result as a message (A list of string) to send over network
+        // Message Structure: DIM, hull.dim,
+        //                    INTERVAlS, interval[0].min, interval[0].max, interval[1].min, interval[1].max, ...
+        //                    START_TIME, start_time
+        //                    END_TIME, end_time
+
+
+        String dim = "DIM," + Integer.toString(hull.dim);
+        String intervals = "INTERVALS,";
+        for (int i= 0; i< hull.dim; i++){
+            intervals += Double.toString(hull.intervals[i].min) + ",";
+            if(i < hull.dim - 1){intervals += Double.toString(hull.intervals[i].max) + ",";}
+            else{intervals += Double.toString(hull.intervals[i].max);}
+        }
+        String start_time = "STARL_TIME," +Long.toString(startTime.getTime());
+        String end_time = "END_TIME," +Long.toString(endTime.getTime());
+
+        String[] str = {dim, intervals, start_time, end_time};
+
+        return str;
+    }
 }

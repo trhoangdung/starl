@@ -14,14 +14,17 @@ import java.util.Map;
 import edu.illinois.mitra.starl.comms.RobotMessage;
 import edu.illinois.mitra.starl.gvh.GlobalVarHolder;
 import edu.illinois.mitra.starl.interfaces.LogicThread;
+import edu.illinois.mitra.starl.models.Model_quadcopter;
 import edu.illinois.mitra.starl.motion.MotionParameters;
 import edu.illinois.mitra.starl.motion.MotionParameters.COLAVOID_MODE_TYPE;
 import edu.illinois.mitra.starl.objects.ItemPosition;
 
 
+
 public class two_quadcopters_searching_mission_app extends LogicThread {
     private static final String TAG = "Follow App";
     public static final int ARRIVED_MSG = 22;
+    public static final int REACH_MSG = 20;
     private int destIndex;
     private int messageCount = 0;
     private int numBots;
@@ -61,6 +64,7 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
 
 
         gvh.comms.addMsgListener(this, ARRIVED_MSG);
+        gvh.comms.addMsgListener(this, REACH_MSG); // listen to reach-set message from others
         // bot names must be bot0, bot1, ... botn for this to work
         String intValue = name.replaceAll("[^0-9]", "");
         destIndex = Integer.parseInt(intValue);
@@ -101,9 +105,15 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
                         msgNum++;
                         gvh.log.d(TAG, "At Goal, sent message");
                         gvh.comms.addOutgoingMessage(inform);
+
                         arrived = true;
                         stage = Stage.WAIT;
                     }
+
+                    if(gvh.plat.reachset != null){
+                            System.out.print("Get reach set of " +gvh.id.getName() + " from "+gvh.plat.reachset.startTime + " to "+gvh.plat.reachset.endTime + "\n");
+                    }
+
                     break;
                 case WAIT:
                     if((messageCount >= numBots - 1) && arrived) {

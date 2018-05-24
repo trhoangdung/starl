@@ -268,10 +268,11 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 				// step 4 : display result
 				double noise_percent = 0.01;
 
-
 				HyperRectangle init_rect = get_init_set(mypos.x, mypos.v_x, mypos.y, mypos.v_y, noise_percent);
 				LiftingSettings lift_setting = get_lifting_setting(init_rect);
 				FaceLiftingResult rs = call_face_lifting(lift_setting, mypos.pitch, mypos.roll);
+				System.out.print("Finish computing reach set and store the reach set \n");
+				gvh.plat.setReachset(rs);
 
 			}
 
