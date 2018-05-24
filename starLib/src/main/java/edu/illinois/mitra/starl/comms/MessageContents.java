@@ -26,7 +26,11 @@ public class MessageContents {
 			contents.add(p);
 		}
 	}
-	
+
+	// Dung Tran add this constructor: 5/26/2018
+	public MessageContents(List<String> contents){
+		this.contents = contents;
+	}
 	/**
 	 * Reconstruct a MessageContents object from a received string
 	 * @param fromString Received string to be parsed

@@ -220,21 +220,22 @@ public class FaceLifting_for_Quadcopter {
         FaceLiftingResult rs = new FaceLiftingResult();
         Timestamp start_time = new Timestamp(startMs);
         rs.set_start_time(start_time);     // set start time
-        System.out.print("Initial Set \n");
-        setting.initRect.print();
+        //System.out.print("Initial Set \n");
+        //setting.initRect.print();
 
         while(runTimeRemaining > 0.0){
 
             iter++;
-            System.out.print("Iteration = " +iter +"\n");
-            System.out.print("Step size used for this iteration is " +stepSize +"\n");
+            //System.out.print("Iteration = " +iter +"\n");
+            //System.out.print("Step size used for this iteration is " +stepSize +"\n");
             rs.update_iteration_number(iter); // update iteration number
             rs.reset_reach_set();   // reset the reachable set to store the new reachable set using new stepSize
             safe = true;
 
-            //if (stepSize < 0.0000001){
-            //    throw new java.lang.Error("Step size is too small");
-            //}
+            if (stepSize < 0.0000001){
+                break; // break if stepSize is too small
+                //throw new java.lang.Error("Step size is too small");
+            }
 
             double reachTimeRemaining = setting.reachTime;
             double reachTimeAdvance = 0.0;
@@ -243,7 +244,7 @@ public class FaceLifting_for_Quadcopter {
             HyperRectangle trackedRect = setting.initRect.copy();
             HyperRectangle hull = setting.initRect.copy();
 
-            while (safe && reachTimeRemaining > 0.0){ // do face lifting with current stepSize, check safety at runtime
+            while (reachTimeRemaining > 0.0){ // do face lifting with current stepSize, check safety at runtime
 
                 SingleLiftingResult singleRes = lift_single_rect(trackedRect, stepSize, reachTimeRemaining, current_pitch, current_roll);
 
@@ -262,21 +263,22 @@ public class FaceLifting_for_Quadcopter {
                 long currentTimeLong = startMs + reachTimeAdvanceLong;
 
                 if (!safe){
-                    System.out.print("System is unsafe at time: "+new Timestamp(currentTimeLong)+"\n");
-                    System.out.print("Unsafe Reach Set\n");
-                    trackedRect.print();
+                    //System.out.print("System violate its local safety specification at time: "+new Timestamp(currentTimeLong)+"\n");
+                    //System.out.print("Unsafe Reach Set\n");
+                    //trackedRect.print();
                     rs.set_unsafe_rect(trackedRect);
                     rs.set_unsafe_time(reachTimeAdvance);
+                    rs.set_unsafe_time_exact(new Timestamp(currentTimeLong));
 
                 }
 
                 reachTimeRemaining -= reachTimeElapsed;
-                System.out.print("reachTimeAdvance = "+reachTimeAdvance+"\n");
-                System.out.print("remainingReachTime = " +reachTimeRemaining + "\n");
-                System.out.print("Reach set at time: " +new Timestamp(currentTimeLong)+"\n");
-                trackedRect.print();
-                System.out.print("Reach set hull from "+new Timestamp(startMs) +" to "+new Timestamp(currentTimeLong) +" = " +"\n");
-                hull.print();
+                //System.out.print("reachTimeAdvance = "+reachTimeAdvance+"\n");
+                //System.out.print("remainingReachTime = " +reachTimeRemaining + "\n");
+                //System.out.print("Reach set at time: " +new Timestamp(currentTimeLong)+"\n");
+                //trackedRect.print();
+                //System.out.print("Reach set hull from "+new Timestamp(startMs) +" to "+new Timestamp(currentTimeLong) +" = " +"\n");
+                //hull.print();
                 rs.set_end_time(new Timestamp(currentTimeLong)); // end time for this faceLifting result
 
             }
@@ -284,9 +286,9 @@ public class FaceLifting_for_Quadcopter {
 
             long current = System.currentTimeMillis();
             long runTimeElapsed = current - startMs;
-            System.out.print("runTimeElaped = "+runTimeElapsed +"\n");
+            //System.out.print("runTimeElaped = "+runTimeElapsed +"\n");
             runTimeRemaining = setting.maxRuntimeMilliseconds - runTimeElapsed;
-            System.out.print("remainingRunTime = "+runTimeRemaining +"\n");
+            //System.out.print("remainingRunTime = "+runTimeRemaining +"\n");
 
             if (runTimeRemaining > 0.0){ // if we still have time, redoing face lifting with a smaller step to get the as good as possible result.
                 stepSize = stepSize / 2.0;

@@ -6,11 +6,13 @@ package com.example.drreachapps.two_quadcopters_searching_mission;
  */
 
 
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import edu.illinois.mitra.starl.comms.MessageContents;
 import edu.illinois.mitra.starl.comms.RobotMessage;
 import edu.illinois.mitra.starl.gvh.GlobalVarHolder;
 import edu.illinois.mitra.starl.interfaces.LogicThread;
@@ -18,7 +20,9 @@ import edu.illinois.mitra.starl.models.Model_quadcopter;
 import edu.illinois.mitra.starl.motion.MotionParameters;
 import edu.illinois.mitra.starl.motion.MotionParameters.COLAVOID_MODE_TYPE;
 import edu.illinois.mitra.starl.objects.ItemPosition;
-
+import tran.lib.drreach.drreachComputation.FaceLiftingResult;
+import tran.lib.drreach.drreachComputation.HyperRectangle;
+import tran.lib.drreach.drreachComputation.Interval;
 
 
 public class two_quadcopters_searching_mission_app extends LogicThread {
@@ -33,6 +37,9 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
     private boolean goForever = true;
     private int msgNum = 0;
     private HashSet<RobotMessage> receivedMsgs = new HashSet<RobotMessage>();
+    private HashSet<RobotMessage> reachsetMsgs = new HashSet<>();
+    private int reachSetMsgNum = 0;
+    private int reachSetMsgCount = 0;
 
     final Map<String, ItemPosition> destinations = new HashMap<String, ItemPosition>();
     ItemPosition currentDestination;
@@ -110,9 +117,19 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
                         stage = Stage.WAIT;
                     }
 
+                    // broadcast reach set to other robots
                     if(gvh.plat.reachset != null){
-                            System.out.print("Get reach set of " +gvh.id.getName() + " from "+gvh.plat.reachset.startTime + " to "+gvh.plat.reachset.endTime + "\n");
+
+                        System.out.print(gvh.id.getName() + " computes it reach set from "+gvh.plat.reachset.startTime + " to "+gvh.plat.reachset.endTime + "\n");
+                        MessageContents reach_set_msg_content = new MessageContents(gvh.plat.reachset.messageEncoder());
+                        RobotMessage reachset_msg = new RobotMessage("ALL", name,REACH_MSG, reach_set_msg_content);
+                        System.out.print(gvh.id.getName() + " broadcasts its reach set to others\n");
+                        if(!gvh.plat.reachset.safe){
+                            System.out.print(gvh.id.getName() + " violates its local safety specification at time " +gvh.plat.reachset.unsafe_time_exact.toString() +"\n");
+                        }
+                        gvh.comms.addOutgoingMessage(reachset_msg);
                     }
+
 
                     break;
                 case WAIT:
@@ -124,7 +141,7 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
                 case DONE:
                     return null;
             }
-            sleep(100);
+            sleep(150);
         }
     }
 
@@ -142,12 +159,69 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
             receivedMsgs.add(m);
             messageCount++;
         }
-       /* if((messageCount == numBots) && arrived) {
-            messageCount = 0;
-            stage = Stage.PICK;
-        }*/
+
+        if(m.getMID() == REACH_MSG && !m.getFrom().equals(name)){
+
+            System.out.print(gvh.id.getName() + " receive reach set from " +m.getFrom() + "\n");
+            FaceLiftingResult rs = reachMsgDecoder(m);
+            System.out.print("Reach set of "+m.getFrom() +":\n");
+            rs.hull.print();
+            System.out.print("This reach set is valid from "+rs.startTime.getTime() + " to " +rs.endTime.getTime() +"\n");
+        }
+
     }
 
+
+    private FaceLiftingResult reachMsgDecoder(RobotMessage m){
+        FaceLiftingResult rs = new FaceLiftingResult();
+
+        String dim = m.getContents(0);
+        String intervals = m.getContents(1);
+        String start_time = m.getContents(2);
+        String end_time = m.getContents(3);
+
+        dim = dim.replace("DIM,","");
+
+        int d = Integer.parseInt(dim);
+
+        intervals = intervals.replace("INTERVALS,","");
+
+        double[] min_vec = new double[d];
+        double[] max_vec = new double[d];
+        String min_char;
+        String max_char;
+        int index;
+
+        for (int i=0; i<d; i++){
+
+            index = intervals.indexOf(",");
+            min_char = intervals.substring(0, index);
+            min_vec[i] = Double.parseDouble(min_char);
+            intervals = intervals.substring(index + 1).trim();
+            if(i < d - 1){
+                index = intervals.indexOf(",");
+                max_char = intervals.substring(0,index);
+                intervals = intervals.substring(index + 1).trim();
+            }
+            else{
+                max_char = intervals;
+            }
+            max_vec[i] = Double.parseDouble(max_char);
+
+        }
+
+        HyperRectangle hull = new HyperRectangle(Interval.vector2intervals(min_vec, max_vec));
+        start_time = start_time.replace("STARL_TIME,","");
+        end_time = end_time.replace("END_TIME,","");
+        long start_time_long = Long.parseLong(start_time);
+        long end_time_long = Long.parseLong(end_time);
+
+        rs.set_start_time(new Timestamp(start_time_long));
+        rs.set_end_time(new Timestamp(end_time_long));
+        rs.update_hull(hull);
+
+        return rs;
+    }
 
     @SuppressWarnings("unchecked")
     private <X, T> T getDestination(Map<X, T> map, int index) {

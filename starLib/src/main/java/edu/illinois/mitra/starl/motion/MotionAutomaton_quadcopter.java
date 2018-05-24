@@ -116,16 +116,16 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 			if(running) {
 				mypos = (Model_quadcopter)gvh.plat.getModel();
 //				System.out.println(mypos.toString());
-				System.out.printf("mypos (%d, %d) \n", mypos.x, mypos.y);
-				System.out.printf("pitch = (%f) \n", mypos.pitch);
-				System.out.printf("roll = (%f) \n", mypos.roll);
-				System.out.printf("yaw = (%f) \n", mypos.yaw);
-				System.out.printf("v_x = %f \n", mypos.v_x);
-				System.out.printf("v_y = %f \n", mypos.v_y);
+				//System.out.printf("mypos (%d, %d) \n", mypos.x, mypos.y);
+				//System.out.printf("pitch = (%f) \n", mypos.pitch);
+				//System.out.printf("roll = (%f) \n", mypos.roll);
+				//System.out.printf("yaw = (%f) \n", mypos.yaw);
+				//System.out.printf("v_x = %f \n", mypos.v_x);
+				//System.out.printf("v_y = %f \n", mypos.v_y);
 
-				System.out.printf("destination (%d, %d) \n", destination.x, destination.y);
+				//System.out.printf("destination (%d, %d) \n", destination.x, destination.y);
 				int distance = (int) Math.sqrt(Math.pow((mypos.x - destination.x),2) + Math.pow((mypos.y - destination.y), 2));
-				System.out.println("distance:" + distance);
+				//System.out.println("distance:" + distance);
 				//int distance = mypos.distanceTo(destination);
 				if(mypos.gaz < -50){
 					//		System.out.println("going down");
@@ -143,7 +143,7 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 								}
 								else{
 									if(distance <= param.GOAL_RADIUS) {
-										System.out.println(">>>Distance: " + distance + " - GOAL_RADIUS " + param.GOAL_RADIUS);
+										//System.out.println(">>>Distance: " + distance + " - GOAL_RADIUS " + param.GOAL_RADIUS);
 										next = STAGE.GOAL;
 									}
 									else{
@@ -160,7 +160,7 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 								break;
 							}
 							if(distance <= param.GOAL_RADIUS) {
-								System.out.println(">>>Distance: " + distance + " - GOAL_RADIUS " + param.GOAL_RADIUS);
+								//System.out.println(">>>Distance: " + distance + " - GOAL_RADIUS " + param.GOAL_RADIUS);
 								next = STAGE.GOAL;
 							}
 							else{
@@ -176,7 +176,7 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 								Rpitch = Math.asin( (-Ay_d * Math.sin(Math.toRadians(mypos.yaw)) - Ax_d * Math.cos(Math.toRadians(mypos.yaw))) / (Math.cos(Rroll)) %1);
 								Rvs = (kpz * (destination.z - mypos.z) - kdz * mypos.v_z);
 
-								System.out.println(Ryaw + " , " + Ryawsp + " , " +  Rroll  + " , " +  Rpitch + " , " + Rvs);
+								//System.out.println(Ryaw + " , " + Ryawsp + " , " +  Rroll  + " , " +  Rpitch + " , " + Rvs);
 								//System.out.print("Rpitch = "+Rpitch + "\n");
 								//System.out.print("Rroll = "+Rroll + "\n");
 
@@ -271,7 +271,7 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 				HyperRectangle init_rect = get_init_set(mypos.x, mypos.v_x, mypos.y, mypos.v_y, noise_percent);
 				LiftingSettings lift_setting = get_lifting_setting(init_rect);
 				FaceLiftingResult rs = call_face_lifting(lift_setting, mypos.pitch, mypos.roll);
-				System.out.print("Finish computing reach set and store the reach set \n");
+				//System.out.print("Finish computing reach set and store the reach set \n");
 				gvh.plat.setReachset(rs);
 
 			}
