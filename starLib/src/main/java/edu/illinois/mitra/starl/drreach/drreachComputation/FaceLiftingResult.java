@@ -3,10 +3,15 @@ package edu.illinois.mitra.starl.drreach.drreachComputation;
 // Object to contain FaceLifting Result
 // Dung Tran: 5/9/2018 Update: 5/14/2018
 
+import java.io.PrintWriter;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class FaceLiftingResult {
     public HyperRectangle hull; // convex_hull of all tracked rectangles in face lifting process
@@ -16,7 +21,7 @@ public class FaceLiftingResult {
     public Timestamp startTime; // store the start time when a face lifting method is called. (in seconds)
     public Timestamp endTime; // the time between startTime and endTime is the valid time for the result
 
-    public HashMap<Double, HyperRectangle> reachSets = new HashMap<Double, HyperRectangle>(); // store reachable set overtime
+    public LinkedHashMap<Double, HyperRectangle> reachSets = new LinkedHashMap<>(); // store reachable set overtime
 
     public HyperRectangle unsafe_rect; // unsafe rectangle
     public double unsafe_time;
@@ -88,7 +93,7 @@ public class FaceLiftingResult {
                 if(i < hull.dim - 1){intervals += Double.toString(hull.intervals[i].max) + ",";}
                 else{intervals += Double.toString(hull.intervals[i].max);}
             }
-            String start_time = "STARL_TIME," +Long.toString(startTime.getTime());
+            String start_time = "START_TIME," +Long.toString(startTime.getTime());
             String end_time = "END_TIME," +Long.toString(endTime.getTime());
 
             contents.add(dim);
@@ -98,5 +103,38 @@ public class FaceLiftingResult {
         }
 
         return contents;
+    }
+
+    public void reach_set_writer(PrintWriter writer){
+        // write reach sets to a file for plotting
+
+        // get set of the entries
+        if ((reachSets != null) && (writer != null)){
+            Set set = reachSets.entrySet();
+            // get an iterator
+            Iterator i = set.iterator();
+            while(i.hasNext()){
+                Map.Entry me  = (Map.Entry) i.next();
+                double key_time = Double.parseDouble(me.getKey().toString());
+                HyperRectangle trackedRect = reachSets.get(key_time);
+
+                // time, x1-min, x1-max, x2-min, x2-max, ...
+
+                String str = "";
+                for (int d=0; d < trackedRect.dim; d++){
+                    str += Double.toString(trackedRect.intervals[d].min) + ",";
+                    if(d < trackedRect.dim - 1){
+                        str += Double.toString(trackedRect.intervals[d].max) + ",";
+                    }
+                    else{
+                        str += Double.toString(trackedRect.intervals[d].max);
+                    }
+                }
+
+                writer.printf("" + me.getKey() + "," + str + "\n");
+            }
+            writer.close();
+        }
+
     }
 }

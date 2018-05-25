@@ -204,7 +204,7 @@ public class FaceLifting_for_Quadcopter {
 
     }
 
-    public FaceLiftingResult face_lifting_iterative_improvement (long startMs, long time_offset_between_gvh_and_system, LiftingSettings setting, double current_pitch, double current_roll){
+    public FaceLiftingResult face_lifting_iterative_improvement (long startMs, LiftingSettings setting, double current_pitch, double current_roll){
 
 
         int iter = 0; // number of iteration
@@ -216,7 +216,8 @@ public class FaceLifting_for_Quadcopter {
         UnsafeSet unsafe_set = setting.unsafe_set;
 
         FaceLiftingResult rs = new FaceLiftingResult();
-        Timestamp start_time = new Timestamp(startMs + time_offset_between_gvh_and_system);
+        // ** Note that we use System clock to compute the reach set and use it as global time, we are not using gvh.time()
+        Timestamp start_time = new Timestamp(startMs);
         rs.set_start_time(start_time);     // set start time
         //System.out.print("Initial Set \n");
         //setting.initRect.print();
@@ -258,7 +259,7 @@ public class FaceLifting_for_Quadcopter {
                 reachTimeAdvance += reachTimeElapsed;
                 rs.update_reach_set(reachTimeAdvance, trackedRect); // update reachable set
                 long reachTimeAdvanceLong = Double.valueOf(reachTimeAdvance*1000.0).longValue();
-                long currentTimeLong = startMs + time_offset_between_gvh_and_system + reachTimeAdvanceLong;
+                long currentTimeLong = startMs + reachTimeAdvanceLong;
 
                 if (!safe){
                     //System.out.print("System violate its local safety specification at time: "+new Timestamp(currentTimeLong)+"\n");
@@ -280,7 +281,6 @@ public class FaceLifting_for_Quadcopter {
                 rs.set_end_time(new Timestamp(currentTimeLong)); // end time for this faceLifting result
 
             }
-
 
             long current = System.currentTimeMillis();
             long runTimeElapsed = current - startMs;

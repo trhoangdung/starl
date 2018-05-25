@@ -261,12 +261,12 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 
 			if (stage == STAGE.MOVE){
 
-				System.out.print("Computing next 1s reachable set for " +gvh.id.getName() + "\n");
+				System.out.print(gvh.id.getName() + " is computing its reachable set for next 2 seconds" + "\n");
 				// step 1 : get initial set
 				// step 2 : lifting setting
 				// step 3 : call face lifting
 				// step 4 : display result
-				double noise_percent = 0.01;
+				double noise_percent = 0.01; // accuracy of gps and sensor
 
 				HyperRectangle init_rect = get_init_set(mypos.x, mypos.v_x, mypos.y, mypos.v_y, noise_percent);
 				LiftingSettings lift_setting = get_lifting_setting(init_rect);
@@ -456,8 +456,8 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 		// setting for face-lifting method
 		// Dung Tran: 5/22/2018
 		double initialStepSize = 0.01;
-		double reachTime = 1.0;
-		long max_runtime_milliseconds = 5;
+		double reachTime = 2.0;
+		long max_runtime_milliseconds = 10;
 		int dynamics_index = 0; // linear pendulum dynamics
 		double max_rect_width_before_error = 100;
 
@@ -480,7 +480,7 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 
 		FaceLifting_for_Quadcopter FL = new FaceLifting_for_Quadcopter();
 		long time_offset_between_gvh_and_system_time = gvh.time() - System.currentTimeMillis(); // This is due to simulation time is different from system current time
-		FaceLiftingResult rs = FL.face_lifting_iterative_improvement(System.currentTimeMillis(), time_offset_between_gvh_and_system_time , setting, current_pitch, current_roll);
+		FaceLiftingResult rs = FL.face_lifting_iterative_improvement(System.currentTimeMillis(), setting, current_pitch, current_roll);
 		return rs;
 
 	}
