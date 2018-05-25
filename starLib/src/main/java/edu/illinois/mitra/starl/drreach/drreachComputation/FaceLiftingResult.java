@@ -75,7 +75,7 @@ public class FaceLiftingResult {
         this.stepSize_used = current_stepSize;
     }
 
-    public List<String> messageEncoder(){
+    public List<String> messageEncoder(long send_at_time){
 
         // Encode the face-lifting result as a message (A list of string) to send over network
         // Message Structure: DIM, hull.dim,
@@ -86,6 +86,7 @@ public class FaceLiftingResult {
         List<String> contents = new ArrayList<>();
 
         if (hull != null){
+            String send_time = "SENT_AT_TIME," + Long.toString(send_at_time);
             String dim = "DIM," + Integer.toString(hull.dim);
             String intervals = "INTERVALS,";
             for (int i= 0; i< hull.dim; i++){
@@ -96,6 +97,7 @@ public class FaceLiftingResult {
             String start_time = "START_TIME," +Long.toString(startTime.getTime());
             String end_time = "END_TIME," +Long.toString(endTime.getTime());
 
+            contents.add(send_time);
             contents.add(dim);
             contents.add(intervals);
             contents.add(start_time);

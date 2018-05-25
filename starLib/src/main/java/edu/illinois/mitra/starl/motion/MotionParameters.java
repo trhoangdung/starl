@@ -149,7 +149,7 @@ public class MotionParameters {
 		private boolean ENABLE_ARCING = true;
 		private int ARCSPEED_MAX = 200;
 		private int ARCANGLE_MAX = 25;
-		private int AUTOMATON_PERIOD = 100;
+		private int AUTOMATON_PERIOD = 120;
 		private COLAVOID_MODE_TYPE COLAVOID_MODE = COLAVOID_MODE_TYPE.STOP_ON_COLLISION;
 		private int COLLISION_AVOID_STRAIGHTTIME = 1250;
 		private int COLLISION_AVOID_BACKTIME = 800;

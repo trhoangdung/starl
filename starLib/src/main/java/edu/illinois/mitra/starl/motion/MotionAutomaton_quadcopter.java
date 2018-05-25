@@ -222,7 +222,7 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 							}
 							break;
 						case GOAL:
-							System.out.println("Done flag");
+							//System.out.println("Done flag");
 							done = true;
 							gvh.log.i(TAG, "At goal!");
 							gvh.log.i("DoneFlag", "write");
@@ -261,7 +261,6 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 
 			if (stage == STAGE.MOVE){
 
-				System.out.print(gvh.id.getName() + " is computing its reachable set for next 2 seconds" + "\n");
 				// step 1 : get initial set
 				// step 2 : lifting setting
 				// step 3 : call face lifting

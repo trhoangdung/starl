@@ -144,7 +144,7 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
 
                         System.out.print(gvh.id.getName() + " computes it reach set from "+gvh.plat.reachset.startTime + " to "+gvh.plat.reachset.endTime + "\n");
                         long now = System.nanoTime();
-                        MessageContents reach_set_msg_content = new MessageContents(gvh.plat.reachset.messageEncoder());
+                        MessageContents reach_set_msg_content = new MessageContents(gvh.plat.reachset.messageEncoder(System.currentTimeMillis()));
                         RobotMessage reachset_msg = new RobotMessage("ALL", name,REACH_MSG, reach_set_msg_content);
                         long encoding_time = System.nanoTime() - now;
                         System.out.print(gvh.id.getName() + " encodes its reach set to send out in " +((double)encoding_time)/1000000 + " milliseconds\n");
@@ -210,6 +210,10 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
         if(m.getMID() == REACH_MSG && !m.getFrom().equals(name)){
 
             System.out.print(gvh.id.getName() + " receive reach set (hull) from " +m.getFrom() + "\n");
+            String send_at_time = m.getContents(0);
+            send_at_time = send_at_time.replace("SENT_AT_TIME,", "");
+            long send_at_time_long = Long.parseLong(send_at_time);
+            System.out.print("Time for transferring this reach set over network is arround (not considering clock mismatch) " +(System.currentTimeMillis() - send_at_time_long) + " milliseconds\n");
             long now = System.nanoTime();
             FaceLiftingResult rs = reachMsgDecoder(m);
             long decoding_time = System.nanoTime() - now;
@@ -219,17 +223,12 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
                 decoding_counts++;
             }else{decoding_time_writer.close();}
 
-            System.out.print("Reach set (hull) of "+m.getFrom() +":\n");
+            System.out.print("Reach set (hull) of "+m.getFrom() + " that is valid from " + rs.startTime + " to " + rs.endTime + " of its local time is:\n");
             rs.hull.print();
-            System.out.print("This reach set (hull) is valid from "+rs.startTime + " to " + rs.endTime + " of " +m.getFrom() + " local time\n");
-            //System.out.print("Current global time of "+gvh.id.getName() +" is " +gvh.time() + "(" +new Timestamp(gvh.time()) + ")" +"\n");
             now = System.currentTimeMillis();
-            System.out.print("Current global time is " +now +"(" +new Timestamp(now) + ")\n");
-            System.out.printf("Time for transferring and decoding this reach set is around (not considering clock mismatch) " +Long.toString(now - rs.startTime.getTime()) + " milliseconds \n");
-
-            System.out.print(gvh.id.getName() + " current reach set (hull) is: "  + "\n");
+            System.out.print("Current reach set (hull) of " + gvh.id.getName() + " that is valid from " + gvh.plat.reachset.startTime + " to " + gvh.plat.reachset.endTime + " of its local time is:\n");
             gvh.plat.reachset.hull.print();
-            System.out.print("This reach set is valid from " + gvh.plat.reachset.startTime + " to " + gvh.plat.reachset.endTime +  " of " +gvh.id.getName() + " local time\n");
+            System.out.print("Current local time of " + gvh.id.getName() + " is " +new Timestamp(now) + "\n");
 
             collision_flag = check_collision(rs);
         }
@@ -240,10 +239,11 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
     private FaceLiftingResult reachMsgDecoder(RobotMessage m){
         FaceLiftingResult rs = new FaceLiftingResult();
 
-        String dim = m.getContents(0);
-        String intervals = m.getContents(1);
-        String start_time = m.getContents(2);
-        String end_time = m.getContents(3);
+        String send_time = m.getContents(0); // send at time, not used here
+        String dim = m.getContents(1);
+        String intervals = m.getContents(2);
+        String start_time = m.getContents(3);
+        String end_time = m.getContents(4);
 
         dim = dim.replace("DIM,","");
 
