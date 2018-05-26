@@ -38,10 +38,10 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
     private boolean goForever = true;
     private int msgNum = 0;
     private HashSet<RobotMessage> receivedMsgs = new HashSet<RobotMessage>();
-    private HashSet<RobotMessage> reachsetMsgs = new HashSet<>();
     private int reachSetMsgNum = 0;
     private int reachSetMsgCount = 0;
 
+    FaceLiftingResult current_reach_set;
     private PrintWriter encoding_time_writer;
     private int encoding_counts = 0;
     private PrintWriter decoding_time_writer;
@@ -141,13 +141,28 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
 
                     // broadcast reach set to other robots
                     if(gvh.plat.reachset != null){
-
-                        System.out.print(gvh.id.getName() + " computes it reach set from "+gvh.plat.reachset.startTime + " to "+gvh.plat.reachset.endTime + "\n");
+                        current_reach_set = gvh.plat.reachset;
+                        System.out.print(gvh.id.getName() + " computes it reach set from "+current_reach_set.startTime + " to "+current_reach_set.endTime + "\n");
                         long now = System.nanoTime();
-                        MessageContents reach_set_msg_content = new MessageContents(gvh.plat.reachset.messageEncoder(System.currentTimeMillis()));
+                        MessageContents reach_set_msg_content = new MessageContents(current_reach_set.messageEncoder(System.currentTimeMillis()));
                         RobotMessage reachset_msg = new RobotMessage("ALL", name,REACH_MSG, reach_set_msg_content);
                         long encoding_time = System.nanoTime() - now;
                         System.out.print(gvh.id.getName() + " encodes its reach set to send out in " +((double)encoding_time)/1000000 + " milliseconds\n");
+                        System.out.print(gvh.id.getName() + " broadcasts its reach set to others\n");
+                        gvh.comms.addOutgoingMessage(reachset_msg);
+
+                        if(!gvh.plat.reachset.safe){
+
+                            // write unsafe set to a file, just for plotting figure, this affect control performance of the system, just use one time to get reach set
+                            //if(encoding_counts >= 100 && unsafe_set_writer_flag){
+                            //    gvh.plat.reachset.reach_set_writer(unsafe_set_writer);
+                            //    unsafe_set_writer_flag = false;
+                            //}
+
+                            System.out.print(gvh.id.getName() + " may violates its local safety specification at time " +gvh.plat.reachset.unsafe_time_exact.toString() +"\n");
+                        }
+
+                        // get 100 samples of encoding time for plotting
                         if (encoding_counts < 100){
                             encoding_time_writer.printf("" +(new Timestamp(System.currentTimeMillis())) +","+((double)encoding_time)/1000000 +"\n"); // store 100 samples of encoding time
                             encoding_counts++;
@@ -162,19 +177,6 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
                         //    reach_set_writer_flag = false;
                         //}
 
-
-                        System.out.print(gvh.id.getName() + " broadcasts its reach set to others\n");
-                        if(!gvh.plat.reachset.safe){
-
-                            // write unsafe set to a file, just for plotting figure, this affect control performance of the system, just use one time to get reach set
-                            //if(encoding_counts >= 100 && unsafe_set_writer_flag){
-                            //    gvh.plat.reachset.reach_set_writer(unsafe_set_writer);
-                            //    unsafe_set_writer_flag = false;
-                            //}
-
-                            System.out.print(gvh.id.getName() + " may violates its local safety specification at time " +gvh.plat.reachset.unsafe_time_exact.toString() +"\n");
-                        }
-                        gvh.comms.addOutgoingMessage(reachset_msg);
                     }
 
 
@@ -218,6 +220,8 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
             FaceLiftingResult rs = reachMsgDecoder(m);
             long decoding_time = System.nanoTime() - now;
             System.out.print("Decoding message from "+m.getFrom() + " takes " +((double)decoding_time)/1000000  + " milliseconds \n");
+
+            // get 100 samples of decoding time for plotting
             if(decoding_counts < 100){
                 decoding_time_writer.printf("" +(new Timestamp(System.currentTimeMillis())) +","+((double)decoding_time)/1000000 +"\n"); // store 100 samples of decoding time
                 decoding_counts++;
@@ -226,11 +230,12 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
             System.out.print("Reach set (hull) of "+m.getFrom() + " that is valid from " + rs.startTime + " to " + rs.endTime + " of its local time is:\n");
             rs.hull.print();
             now = System.currentTimeMillis();
-            System.out.print("Current reach set (hull) of " + gvh.id.getName() + " that is valid from " + gvh.plat.reachset.startTime + " to " + gvh.plat.reachset.endTime + " of its local time is:\n");
-            gvh.plat.reachset.hull.print();
+            System.out.print("Current reach set (hull) of " + gvh.id.getName() + " that is valid from " + current_reach_set.startTime + " to " + current_reach_set.endTime + " of its local time is:\n");
+            current_reach_set.hull.print();
             System.out.print("Current local time of " + gvh.id.getName() + " is " +new Timestamp(now) + "\n");
 
             collision_flag = check_collision(rs);
+            
         }
 
     }
