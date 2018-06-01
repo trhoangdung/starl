@@ -324,7 +324,6 @@ public class FaceLifting implements Runnable {
                 rs.update_safety(safe); // update safety status
                 rs.update_hull(hull);   // update hull
                 reachTimeAdvance += reachTimeElapsed;
-                rs.update_reach_set(reachTimeAdvance, trackedRect); // update reachable set
                 long reachTimeAdvanceLong = Double.valueOf(reachTimeAdvance*1000.0).longValue();
                 long currentTimeLong = startMs + reachTimeAdvanceLong;
 

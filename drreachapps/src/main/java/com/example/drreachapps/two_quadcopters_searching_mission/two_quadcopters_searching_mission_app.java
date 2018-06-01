@@ -9,6 +9,8 @@ package com.example.drreachapps.two_quadcopters_searching_mission;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,11 +48,16 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
     private int encoding_counts = 0;
     private PrintWriter decoding_time_writer;
     private int decoding_counts = 0;
+    private PrintWriter transferring_time_writer;
+    private int transferring_counts = 0;
     private PrintWriter reach_set_writer; // to write reach set to a file for ploting
+    private int reach_set_counts = 0;
     private PrintWriter unsafe_set_writer;
     private boolean reach_set_writer_flag = true;
     private boolean unsafe_set_writer_flag = true;
     private boolean collision_flag = false; // true if there may be a collision in future
+    private boolean global_safety_flag = false; // true if the global property is violated
+    private boolean useful_message_flag = false;
 
     final Map<String, ItemPosition> destinations = new HashMap<String, ItemPosition>();
     ItemPosition currentDestination;
@@ -91,8 +98,9 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
         try{
             encoding_time_writer = new PrintWriter(gvh.id.getName() +"_encoding_time.dat", "UTF-8");
             decoding_time_writer = new PrintWriter(gvh.id.getName() + "_decoding_time.dat", "UTF-8");
-            reach_set_writer = new PrintWriter(gvh.id.getName() + "_reach_set.dat", "UTF-8");
-            unsafe_set_writer = new PrintWriter(gvh.id.getName() + "_local_unsafe_set.dat", "UTF-8");
+            transferring_time_writer = new PrintWriter(gvh.id.getName() + "_transferring_time.dat", "UTF-8");
+            reach_set_writer = new PrintWriter(gvh.id.getName() + "_reach_set.txt", "UTF-8");
+            unsafe_set_writer = new PrintWriter(gvh.id.getName() + "_local_unsafe_set.txt", "UTF-8");
         }catch(IOException e){
             e.printStackTrace();
         }
@@ -154,27 +162,33 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
                         if(!gvh.plat.reachset.safe){
 
                             // write unsafe set to a file, just for plotting figure, this affect control performance of the system, just use one time to get reach set
-                            //if(encoding_counts >= 100 && unsafe_set_writer_flag){
+                            //if(encoding_counts >= 10 && unsafe_set_writer_flag){
                             //    gvh.plat.reachset.reach_set_writer(unsafe_set_writer);
                             //    unsafe_set_writer_flag = false;
                             //}
 
                             System.out.print(gvh.id.getName() + " may violates its local safety specification at time " +gvh.plat.reachset.unsafe_time_exact.toString() +"\n");
                         }
+                        else{
+                            System.out.print(gvh.id.getName() + " does not violate its local safety property " +"\n");
+                        }
 
                         // get 100 samples of encoding time for plotting
-                        if (encoding_counts < 100){
-                            encoding_time_writer.printf("" +(new Timestamp(System.currentTimeMillis())) +","+((double)encoding_time)/1000000 +"\n"); // store 100 samples of encoding time
-                            encoding_counts++;
-                        }
-                        else{
-                            encoding_time_writer.close();
-                        }
+                        //if (encoding_counts < 10){
+                        //    encoding_counts++;
+                        //    encoding_time_writer.printf("" +encoding_counts +"   "+((double)encoding_time)/1000000 +"\n"); // store 10 samples of encoding time
+                        //}
+                        //else{
+                        //    encoding_time_writer.close();
+                        //}
+
+                        //reach_set_counts++;
 
                         // write reach set to a file just for plotting figure, this affects control performance, don't use it in general
-                        //if (encoding_counts >= 100 && reach_set_writer_flag){
-                        //    gvh.plat.reachset.reach_set_writer(reach_set_writer);
+                        //if (reach_set_counts >= 100 && reach_set_writer_flag){
+                        //    gvh.plat.reachset.write_intermediate_reach_set_to_a_file(reach_set_writer);
                         //    reach_set_writer_flag = false;
+                        //    reach_set_counts = 0;
                         //}
 
                     }
@@ -190,7 +204,7 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
                 case DONE:
                     return null;
             }
-            sleep(150);
+            sleep(250);
         }
     }
 
@@ -211,21 +225,27 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
 
         if(m.getMID() == REACH_MSG && !m.getFrom().equals(name)){
 
-            System.out.print(gvh.id.getName() + " receive reach set (hull) from " +m.getFrom() + "\n");
+            System.out.print(gvh.id.getName() + " receives reach set (hull) from " +m.getFrom() + "\n");
             String send_at_time = m.getContents(0);
             send_at_time = send_at_time.replace("SENT_AT_TIME,", "");
             long send_at_time_long = Long.parseLong(send_at_time);
             System.out.print("Time for transferring this reach set over network is arround (not considering clock mismatch) " +(System.currentTimeMillis() - send_at_time_long) + " milliseconds\n");
+
+            //if(transferring_counts < 10){
+            //    transferring_counts++;
+            //    transferring_time_writer.printf("" +transferring_counts +"  "+(System.currentTimeMillis() - send_at_time_long) +"\n"); // store 10 samples of transferring time
+            //}else{transferring_time_writer.close();}
+
             long now = System.nanoTime();
             FaceLiftingResult rs = reachMsgDecoder(m);
             long decoding_time = System.nanoTime() - now;
             System.out.print("Decoding message from "+m.getFrom() + " takes " +((double)decoding_time)/1000000  + " milliseconds \n");
 
-            // get 100 samples of decoding time for plotting
-            if(decoding_counts < 100){
-                decoding_time_writer.printf("" +(new Timestamp(System.currentTimeMillis())) +","+((double)decoding_time)/1000000 +"\n"); // store 100 samples of decoding time
-                decoding_counts++;
-            }else{decoding_time_writer.close();}
+            // get 10 samples of decoding time for plotting
+            //if(decoding_counts < 10){
+            //    decoding_counts++;
+            //    decoding_time_writer.printf("" +decoding_counts +"  "+((double)decoding_time)/1000000 +"\n"); // store 100 samples of decoding time
+            //}else{decoding_time_writer.close();}
 
             System.out.print("Reach set (hull) of "+m.getFrom() + " that is valid from " + rs.startTime + " to " + rs.endTime + " of its local time is:\n");
             rs.hull.print();
@@ -234,8 +254,51 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
             current_reach_set.hull.print();
             System.out.print("Current local time of " + gvh.id.getName() + " is " +new Timestamp(now) + "\n");
 
-            collision_flag = check_collision(rs);
-            
+            // check if message is useful
+
+            long available_time_for_checking = rs.endTime.getTime() - 3 - 3 - now;
+
+            if (available_time_for_checking > 0){ // time-synchronization error is 3 milliseconds
+                System.out.print("Useful time for checking collision and global safety property is " +available_time_for_checking + " milliseconds\n");
+                useful_message_flag = true;
+                System.out.print("The received reachable set from " +m.getFrom() + " is useful \n");
+            }
+            else{
+                useful_message_flag = false;
+                System.out.print("The received reachable set from " +m.getFrom() + " is not useful, delete it \n");
+            }
+
+
+            if (useful_message_flag){
+                // check collision using useful message
+                double allowable_distance = 100;
+                collision_flag = check_collision(current_reach_set, rs, allowable_distance);
+                if (collision_flag) {
+                    System.out.print(gvh.id.getName() + " may collide with " +m.getFrom() + " in the next " + ((double)available_time_for_checking)/1000 + " seconds\n");
+                }
+                else{System.out.print(gvh.id.getName() + " will not collide with " +m.getFrom() + " in the next " + ((double)available_time_for_checking)/1000 + " seconds\n");}
+
+                // check global property
+
+                // global unsafe region:    x0 > 1200 and x1 > 2500 // Todo: define more general global safety sepcification
+
+                double x0_max = current_reach_set.hull.intervals[0].max;
+                double x0_min = current_reach_set.hull.intervals[0].min;
+                double x1_max = rs.hull.intervals[0].max;
+                double x1_min = rs.hull.intervals[0].min;
+
+                if ((900 < x0_min) && (x0_max < 1200) && (x1_min > 900) && (x1_max < 1200)){
+                    global_safety_flag = false;
+                    System.out.print("The global property may be violated in the next " + ((double)available_time_for_checking)/1000 + " seconds\n");
+                }
+                else{
+                    global_safety_flag = true;
+                    System.out.print("The global safety property is guarantee in the next " + ((double)available_time_for_checking)/1000 + " seconds\n");
+                }
+
+
+            }
+
         }
 
     }
@@ -293,11 +356,59 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
         return rs;
     }
 
-    private boolean check_collision(FaceLiftingResult other_rs){
+    private boolean check_collision(FaceLiftingResult self_current_rs, FaceLiftingResult sender_current_rs, double allowable_distance){
 
         boolean collision = false;
 
+        double self_x_min = self_current_rs.hull.intervals[0].min;
+        double self_x_max = self_current_rs.hull.intervals[0].max;
+        double self_y_min = self_current_rs.hull.intervals[2].min;
+        double self_y_max = self_current_rs.hull.intervals[2].max;
 
+        double sender_x_min = sender_current_rs.hull.intervals[0].min;
+        double sender_x_max = sender_current_rs.hull.intervals[0].max;
+        double sender_y_min = sender_current_rs.hull.intervals[2].min;
+        double sender_y_max = sender_current_rs.hull.intervals[2].max;
+
+        double x1 = sender_x_min - self_x_min;
+        double x2 = sender_x_min - self_x_max;
+        double x3 = sender_x_max - self_x_min;
+        double x4 = sender_x_max - self_x_max;
+
+        double y1 = sender_y_min - self_y_min;
+        double y2 = sender_y_min - self_y_max;
+        double y3 = sender_y_max - self_x_min;
+        double y4 = sender_y_max - self_x_max;
+
+        double d1 = Math.pow(x1, 2) + Math.pow(y1, 2);
+        double d2 = Math.pow(x1, 2) + Math.pow(y2, 2);
+        double d3 = Math.pow(x1, 2) + Math.pow(y3, 2);
+        double d4 = Math.pow(x1, 2) + Math.pow(y4, 2);
+
+        double d5 = Math.pow(x2, 2) + Math.pow(y1, 2);
+        double d6 = Math.pow(x2, 2) + Math.pow(y2, 2);
+        double d7 = Math.pow(x2, 2) + Math.pow(y3, 2);
+        double d8 = Math.pow(x2, 2) + Math.pow(y4, 2);
+
+        double d9 = Math.pow(x3, 2) + Math.pow(y1, 2);
+        double d10 = Math.pow(x3, 2) + Math.pow(y2, 2);
+        double d11 = Math.pow(x3, 2) + Math.pow(y3, 2);
+        double d12 = Math.pow(x3, 2) + Math.pow(y4, 2);
+
+        double d13 = Math.pow(x4, 2) + Math.pow(y1, 2);
+        double d14 = Math.pow(x4, 2) + Math.pow(y2, 2);
+        double d15 = Math.pow(x4, 2) + Math.pow(y3, 2);
+        double d16 = Math.pow(x4, 2) + Math.pow(y4, 2);
+
+        double d[] = {d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16};
+
+        Arrays.sort(d);
+
+        double dmin = d[0];
+
+        if (dmin < allowable_distance){
+            collision = true;
+        }
 
         return collision;
     }

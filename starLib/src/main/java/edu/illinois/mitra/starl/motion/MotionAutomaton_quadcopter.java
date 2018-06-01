@@ -1,5 +1,7 @@
 package edu.illinois.mitra.starl.motion;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 
 import edu.illinois.mitra.starl.gvh.GlobalVarHolder;
@@ -50,7 +52,6 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 	// Motion tracking
 	protected ItemPosition destination;
 	private Model_quadcopter mypos;
-
 
 	protected enum STAGE {
 		INIT, MOVE, HOVER, TAKEOFF, LAND, GOAL, STOP
@@ -111,6 +112,7 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 		double kpx,kpy,kpz, kdx,kdy,kdz;
 		kpx = kpy = kpz = 0.00033;
 		kdx = kdy = kdz = 0.0006;
+
 		while(true) {
 			//			gvh.gps.getObspointPositions().updateObs();
 			if(running) {
@@ -260,12 +262,11 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 			}
 
 			if (stage == STAGE.MOVE){
-
 				// step 1 : get initial set
 				// step 2 : lifting setting
 				// step 3 : call face lifting
 				// step 4 : display result
-				double noise_percent = 0.01; // accuracy of gps and sensor
+				double noise_percent = 0.02; // accuracy sensor
 
 				HyperRectangle init_rect = get_init_set(mypos.x, mypos.v_x, mypos.y, mypos.v_y, noise_percent);
 				LiftingSettings lift_setting = get_lifting_setting(init_rect);
@@ -480,6 +481,9 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 		FaceLifting_for_Quadcopter FL = new FaceLifting_for_Quadcopter();
 		long time_offset_between_gvh_and_system_time = gvh.time() - System.currentTimeMillis(); // This is due to simulation time is different from system current time
 		FaceLiftingResult rs = FL.face_lifting_iterative_improvement(System.currentTimeMillis(), setting, current_pitch, current_roll);
+
+		// may effect to control performance, do not use in general
+
 		return rs;
 
 	}

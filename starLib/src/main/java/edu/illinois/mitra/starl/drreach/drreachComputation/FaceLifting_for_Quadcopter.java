@@ -6,7 +6,11 @@ package edu.illinois.mitra.starl.drreach.drreachComputation;
 // Dung Tran: 5/22/2018
 
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.Timestamp;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import edu.illinois.mitra.starl.drreach.drreachDynamics.Simplified_Quadcopter;
 import edu.illinois.mitra.starl.gvh.GlobalVarHolder;
@@ -215,9 +219,11 @@ public class FaceLifting_for_Quadcopter {
         boolean safe = true;
         UnsafeSet unsafe_set = setting.unsafe_set;
 
+        long time_synchronization_error = ThreadLocalRandom.current().nextLong(3); // time_synchronization error <= 3
+
         FaceLiftingResult rs = new FaceLiftingResult();
         // ** Note that we use System clock to compute the reach set and use it as global time, we are not using gvh.time()
-        Timestamp start_time = new Timestamp(startMs);
+        Timestamp start_time = new Timestamp(startMs + time_synchronization_error);
         rs.set_start_time(start_time);     // set start time
         //System.out.print("Initial Set \n");
         //setting.initRect.print();
@@ -257,9 +263,11 @@ public class FaceLifting_for_Quadcopter {
                 rs.update_safety(safe); // update safety status
                 rs.update_hull(hull);   // update hull
                 reachTimeAdvance += reachTimeElapsed;
-                rs.update_reach_set(reachTimeAdvance, trackedRect); // update reachable set
+                rs.update_intermediate_reach_set(reachTimeAdvance, trackedRect);
+
                 long reachTimeAdvanceLong = Double.valueOf(reachTimeAdvance*1000.0).longValue();
                 long currentTimeLong = startMs + reachTimeAdvanceLong;
+
 
                 if (!safe){
                     //System.out.print("System violate its local safety specification at time: "+new Timestamp(currentTimeLong)+"\n");

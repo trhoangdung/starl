@@ -21,61 +21,75 @@ public class FaceLiftingResult {
     public Timestamp startTime; // store the start time when a face lifting method is called. (in seconds)
     public Timestamp endTime; // the time between startTime and endTime is the valid time for the result
 
-    public LinkedHashMap<Double, HyperRectangle> reachSets = new LinkedHashMap<>(); // store reachable set overtime
+    public List<String> reachSets = new ArrayList<>();
 
     public HyperRectangle unsafe_rect; // unsafe rectangle
     public double unsafe_time;
     public Timestamp unsafe_time_exact;
 
-    public void set_unsafe_rect(HyperRectangle unsafe_rect){
+    public void set_unsafe_rect(HyperRectangle unsafe_rect) {
         this.unsafe_rect = unsafe_rect;
     }
 
-    public void set_unsafe_time(double unsafe_time){
+    public void set_unsafe_time(double unsafe_time) {
         this.unsafe_time = unsafe_time;
     }
 
-    public void set_unsafe_time_exact(Timestamp unsafe_time_exact){this.unsafe_time_exact = unsafe_time_exact;}
+    public void set_unsafe_time_exact(Timestamp unsafe_time_exact) {
+        this.unsafe_time_exact = unsafe_time_exact;
+    }
 
-    public void set_start_time(Timestamp start_time){
+    public void set_start_time(Timestamp start_time) {
         this.startTime = start_time;
     }
 
-    public void set_end_time(Timestamp end_time){
+    public void set_end_time(Timestamp end_time) {
         this.endTime = end_time;
     }
 
-    public void update_hull(HyperRectangle new_hull){
+    public void update_hull(HyperRectangle new_hull) {
         this.hull = new_hull;
     }
 
-    public void update_safety(boolean new_safe){
+    public void update_safety(boolean new_safe) {
         this.safe = new_safe;
     }
 
-    public void update_iteration_number(int new_iter_num){
+    public void update_iteration_number(int new_iter_num) {
         this.iter_num = new_iter_num;
     }
 
-    public void update_reach_set(double reachTimeAdvance, HyperRectangle trackedRect){
-        // this is to store reachable set a long time for checking and plotting if necessary
 
-        this.reachSets.put(reachTimeAdvance, trackedRect);
+    public void reset_reach_set() {
 
-    }
-
-    public void reset_reach_set(){
-
-        if (reachSets != null && !reachSets.isEmpty()){
+        if (reachSets != null && !reachSets.isEmpty()) {
             this.reachSets.clear();
         }
     }
 
-    public void update_stepSize(double current_stepSize){
+    public void update_intermediate_reach_set(Double reachTimeAdvance, HyperRectangle trackedRect){
+
+        String str = "";
+        for (int d = 0; d < trackedRect.dim; d++) {
+            str += Double.toString(trackedRect.intervals[d].min) + "  ";
+            if (d < trackedRect.dim - 1) {
+                str += Double.toString(trackedRect.intervals[d].max) + "  ";
+            } else {
+                str += Double.toString(trackedRect.intervals[d].max);
+            }
+        }
+        //System.out.println("write to file \n");
+        //System.out.println(reachTimeAdvance + "  " + str + "\n");
+        str = Double.toString(reachTimeAdvance) + "  " + str;
+        reachSets.add(str);
+
+    }
+
+    public void update_stepSize(double current_stepSize) {
         this.stepSize_used = current_stepSize;
     }
 
-    public List<String> messageEncoder(long send_at_time){
+    public List<String> messageEncoder(long send_at_time) {
 
         // Encode the face-lifting result as a message (A list of string) to send over network
         // Message Structure: DIM, hull.dim,
@@ -85,17 +99,20 @@ public class FaceLiftingResult {
 
         List<String> contents = new ArrayList<>();
 
-        if (hull != null){
+        if (hull != null) {
             String send_time = "SENT_AT_TIME," + Long.toString(send_at_time);
             String dim = "DIM," + Integer.toString(hull.dim);
             String intervals = "INTERVALS,";
-            for (int i= 0; i< hull.dim; i++){
+            for (int i = 0; i < hull.dim; i++) {
                 intervals += Double.toString(hull.intervals[i].min) + ",";
-                if(i < hull.dim - 1){intervals += Double.toString(hull.intervals[i].max) + ",";}
-                else{intervals += Double.toString(hull.intervals[i].max);}
+                if (i < hull.dim - 1) {
+                    intervals += Double.toString(hull.intervals[i].max) + ",";
+                } else {
+                    intervals += Double.toString(hull.intervals[i].max);
+                }
             }
-            String start_time = "START_TIME," +Long.toString(startTime.getTime());
-            String end_time = "END_TIME," +Long.toString(endTime.getTime());
+            String start_time = "START_TIME," + Long.toString(startTime.getTime());
+            String end_time = "END_TIME," + Long.toString(endTime.getTime());
 
             contents.add(send_time);
             contents.add(dim);
@@ -107,36 +124,16 @@ public class FaceLiftingResult {
         return contents;
     }
 
-    public void reach_set_writer(PrintWriter writer){
-        // write reach sets to a file for plotting
-
-        // get set of the entries
-        if ((reachSets != null) && (writer != null)){
-            Set set = reachSets.entrySet();
-            // get an iterator
-            Iterator i = set.iterator();
-            while(i.hasNext()){
-                Map.Entry me  = (Map.Entry) i.next();
-                double key_time = Double.parseDouble(me.getKey().toString());
-                HyperRectangle trackedRect = reachSets.get(key_time);
-
-                // time, x1-min, x1-max, x2-min, x2-max, ...
-
-                String str = "";
-                for (int d=0; d < trackedRect.dim; d++){
-                    str += Double.toString(trackedRect.intervals[d].min) + ",";
-                    if(d < trackedRect.dim - 1){
-                        str += Double.toString(trackedRect.intervals[d].max) + ",";
-                    }
-                    else{
-                        str += Double.toString(trackedRect.intervals[d].max);
-                    }
-                }
-
-                writer.printf("" + me.getKey() + "," + str + "\n");
-            }
-            writer.close();
-        }
-
+    public void print_intermediate_reach_set(){
+        System.out.println(reachSets);
     }
+
+    public void write_intermediate_reach_set_to_a_file(PrintWriter writer){
+
+        for (String str: reachSets){
+            writer.write(str + "\n");
+        }
+        writer.close();
+    }
+
 }
