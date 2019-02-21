@@ -271,13 +271,13 @@ public class MotionAutomaton_quadcopter extends RobotMotion {
 				HyperRectangle init_rect = get_init_set(mypos.x, mypos.v_x, mypos.y, mypos.v_y, noise_percent);
 				LiftingSettings lift_setting = get_lifting_setting(init_rect);
 				FaceLiftingResult rs = call_face_lifting(lift_setting, mypos.pitch, mypos.roll);
-				//System.out.print("Finish computing reach set and store the reach set \n");
+				System.out.print(gvh.id.getName() + " finishes computing reach set and stores the reach set \n");
 				gvh.plat.setReachset(rs);
 
 			}
 
-			gvh.sleep(param.AUTOMATON_PERIOD);
-			//gvh.sleep(200);
+			//gvh.sleep(param.AUTOMATON_PERIOD);
+			gvh.sleep(200);
 		}
 	}
 

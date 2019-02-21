@@ -1,15 +1,14 @@
-package com.example.drreachapps.two_quadcopters_searching_mission;
+package com.example.drreachapps.multiple_quadcopters_formation_fly_mission;
 
 /**
- * Created by Dung Tran on 5/22/2018.
- * Two quadcopters do their searching missions defined by set of waypoints
+ * Created by Dung Tran on 2/13/2018.
+ * Multiple quadcopters do their searching missions defined by set of waypoints
  */
 
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,17 +17,17 @@ import java.util.Map;
 
 import edu.illinois.mitra.starl.comms.MessageContents;
 import edu.illinois.mitra.starl.comms.RobotMessage;
-import edu.illinois.mitra.starl.gvh.GlobalVarHolder;
-import edu.illinois.mitra.starl.interfaces.LogicThread;
-import edu.illinois.mitra.starl.models.Model_quadcopter;
-import edu.illinois.mitra.starl.motion.MotionParameters;
-import edu.illinois.mitra.starl.motion.MotionParameters.COLAVOID_MODE_TYPE;
-import edu.illinois.mitra.starl.objects.ItemPosition;
 import edu.illinois.mitra.starl.drreach.drreachComputation.FaceLiftingResult;
 import edu.illinois.mitra.starl.drreach.drreachComputation.HyperRectangle;
 import edu.illinois.mitra.starl.drreach.drreachComputation.Interval;
+import edu.illinois.mitra.starl.gvh.GlobalVarHolder;
+import edu.illinois.mitra.starl.interfaces.LogicThread;
+import edu.illinois.mitra.starl.motion.MotionParameters;
+import edu.illinois.mitra.starl.motion.MotionParameters.COLAVOID_MODE_TYPE;
+import edu.illinois.mitra.starl.objects.ItemPosition;
 
-public class two_quadcopters_searching_mission_app extends LogicThread {
+
+public class multiple_quadcopters_searching_mission_app extends LogicThread {
     private static final String TAG = "Follow App";
     public static final int ARRIVED_MSG = 22;
     public static final int REACH_MSG = 20;
@@ -40,16 +39,20 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
     private boolean goForever = true;
     private int msgNum = 0;
     private HashSet<RobotMessage> receivedMsgs = new HashSet<RobotMessage>();
-    private int reachSetMsgNum = 0;
-    private int reachSetMsgCount = 0;
 
     FaceLiftingResult current_reach_set;
     private PrintWriter encoding_time_writer;
     private int encoding_counts = 0;
+    private long total_encoding_time = 0;
     private PrintWriter decoding_time_writer;
     private int decoding_counts = 0;
+    private long total_decoding_time = 0;
     private PrintWriter transferring_time_writer;
     private int transferring_counts = 0;
+    private long total_transferring_time = 0;
+    private int collision_checking_counts = 0;
+    private PrintWriter collision_checking_writer;
+    private long total_collision_checking_time = 0;
     private PrintWriter reach_set_writer; // to write reach set to a file for ploting
     private int reach_set_counts = 0;
     private PrintWriter unsafe_set_writer;
@@ -68,7 +71,7 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
 
     private Stage stage = Stage.INIT;
 
-    public two_quadcopters_searching_mission_app(GlobalVarHolder gvh) {
+    public multiple_quadcopters_searching_mission_app(GlobalVarHolder gvh) {
         super(gvh);
         MotionParameters.Builder settings = new MotionParameters.Builder();
 //		settings.ROBOT_RADIUS(400);
@@ -86,6 +89,37 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
                     destinations.put(i.getName(), i);
                 }
             }
+            else if(gvh.id.getName().equals("quadcopter2")){
+                if(i.getName().charAt(0) == 'C'){
+                    destinations.put(i.getName(), i);
+                }
+            }
+            else if(gvh.id.getName().equals("quadcopter3")){
+                if(i.getName().charAt(0) == 'D'){
+                    destinations.put(i.getName(), i);
+                }
+            }
+            else if(gvh.id.getName().equals("quadcopter4")){
+                if(i.getName().charAt(0) == 'E'){
+                    destinations.put(i.getName(), i);
+                }
+            }
+            else if(gvh.id.getName().equals("quadcopter5")){
+                if(i.getName().charAt(0) == 'F'){
+                    destinations.put(i.getName(), i);
+                }
+            }
+            else if(gvh.id.getName().equals("quadcopter6")){
+                if(i.getName().charAt(0) == 'G'){
+                    destinations.put(i.getName(), i);
+                }
+            }
+            else if(gvh.id.getName().equals("quadcopter7")){
+                if(i.getName().charAt(0) == 'H'){
+                    destinations.put(i.getName(), i);
+                }
+            }
+
 
 
         gvh.comms.addMsgListener(this, ARRIVED_MSG);
@@ -99,13 +133,12 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
             encoding_time_writer = new PrintWriter(gvh.id.getName() +"_encoding_time.dat", "UTF-8");
             decoding_time_writer = new PrintWriter(gvh.id.getName() + "_decoding_time.dat", "UTF-8");
             transferring_time_writer = new PrintWriter(gvh.id.getName() + "_transferring_time.dat", "UTF-8");
+            collision_checking_writer = new PrintWriter(gvh.id.getName() + "_collision_checking_time.dat", "UTF-8");
             reach_set_writer = new PrintWriter(gvh.id.getName() + "_reach_set.txt", "UTF-8");
             unsafe_set_writer = new PrintWriter(gvh.id.getName() + "_local_unsafe_set.txt", "UTF-8");
         }catch(IOException e){
             e.printStackTrace();
         }
-
-
     }
 
     @Override
@@ -142,7 +175,6 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
                         msgNum++;
                         gvh.log.d(TAG, "At Goal, sent message");
                         gvh.comms.addOutgoingMessage(inform);
-
                         arrived = true;
                         stage = Stage.WAIT;
                     }
@@ -150,7 +182,7 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
                     // broadcast reach set to other robots
                     if(gvh.plat.reachset != null){
                         current_reach_set = gvh.plat.reachset;
-                        System.out.print(gvh.id.getName() + " computes it reach set from "+current_reach_set.startTime + " to "+current_reach_set.endTime + "\n");
+                        //System.out.print(gvh.id.getName() + " computes it reach set from "+current_reach_set.startTime + " to "+current_reach_set.endTime + "\n");
                         long now = System.nanoTime();
                         MessageContents reach_set_msg_content = new MessageContents(current_reach_set.messageEncoder(System.currentTimeMillis()));
                         RobotMessage reachset_msg = new RobotMessage("ALL", name,REACH_MSG, reach_set_msg_content);
@@ -173,23 +205,26 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
                             System.out.print(gvh.id.getName() + " does not violate its local safety property " +"\n");
                         }
 
-                        // get 100 samples of encoding time for plotting
-                        //if (encoding_counts < 10){
-                        //    encoding_counts++;
-                        //    encoding_time_writer.printf("" +encoding_counts +"   "+((double)encoding_time)/1000000 +"\n"); // store 10 samples of encoding time
-                        //}
-                        //else{
-                        //    encoding_time_writer.close();
-                        //}
+                        // get average encoding time on 100 samples
+                        if (encoding_counts < 100){
+                            encoding_counts++;
+                            total_encoding_time = total_encoding_time + encoding_time;
+                            if (encoding_counts == 100){
+                                encoding_time_writer.printf("Average encoding time: " + "  "+((double)total_encoding_time)/100000000 +" milliseconds \n"); // milliseconds
+                            }
+                        }
+                        else{
+                            encoding_time_writer.close();
+                        }
 
-                        //reach_set_counts++;
+                        reach_set_counts++;
 
                         // write reach set to a file just for plotting figure, this affects control performance, don't use it in general
-                        //if (reach_set_counts >= 100 && reach_set_writer_flag){
-                        //    gvh.plat.reachset.write_intermediate_reach_set_to_a_file(reach_set_writer);
-                        //    reach_set_writer_flag = false;
-                        //    reach_set_counts = 0;
-                        //}
+                        if (reach_set_counts >= 100 && reach_set_writer_flag){
+                            gvh.plat.reachset.write_intermediate_reach_set_to_a_file(reach_set_writer);
+                            reach_set_writer_flag = false;
+                            reach_set_counts = 0;
+                        }
 
                     }
 
@@ -223,29 +258,36 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
             messageCount++;
         }
 
+
         if(m.getMID() == REACH_MSG && !m.getFrom().equals(name)){
 
-            System.out.print(gvh.id.getName() + " receives reach set (hull) from " +m.getFrom() + "\n");
+            //System.out.print(gvh.id.getName() + " receives reach set (hull) from " +m.getFrom() + "\n");
             String send_at_time = m.getContents(0);
             send_at_time = send_at_time.replace("SENT_AT_TIME,", "");
             long send_at_time_long = Long.parseLong(send_at_time);
-            System.out.print("Time for transferring this reach set over network is arround (not considering clock mismatch) " +(System.currentTimeMillis() - send_at_time_long) + " milliseconds\n");
+            //System.out.print("Time for transferring this reach set over network is arround (not considering clock mismatch) " +(System.currentTimeMillis() - send_at_time_long) + " milliseconds\n");
 
-            //if(transferring_counts < 10){
-            //    transferring_counts++;
-            //    transferring_time_writer.printf("" +transferring_counts +"  "+(System.currentTimeMillis() - send_at_time_long) +"\n"); // store 10 samples of transferring time
-            //}else{transferring_time_writer.close();}
+            // get average transferring time on 100 samples
+            if(transferring_counts < 100){
+                transferring_counts++;
+                total_transferring_time = System.currentTimeMillis() - send_at_time_long;
+                if (transferring_counts == 100){
+                   transferring_time_writer.printf("Average transferring time: " + "  "+((double)total_transferring_time)/100 +" milliseconds \n"); // milliseconds
+                }
+            }else{transferring_time_writer.close();}
 
             long now = System.nanoTime();
             FaceLiftingResult rs = reachMsgDecoder(m);
             long decoding_time = System.nanoTime() - now;
-            System.out.print("Decoding message from "+m.getFrom() + " takes " +((double)decoding_time)/1000000  + " milliseconds \n");
 
-            // get 10 samples of decoding time for plotting
-            //if(decoding_counts < 10){
-            //    decoding_counts++;
-            //    decoding_time_writer.printf("" +decoding_counts +"  "+((double)decoding_time)/1000000 +"\n"); // store 100 samples of decoding time
-            //}else{decoding_time_writer.close();}
+            // get average decoding time on 1000 samples
+            if(decoding_counts < 100){
+                decoding_counts++;
+                total_decoding_time = total_decoding_time + decoding_time;
+                if (decoding_counts == 100){
+                    decoding_time_writer.printf("Average decoding time: " + "  "+((double)total_decoding_time)/100000000 +" milliseconds \n"); // milliseconds
+                }
+            }else{decoding_time_writer.close();}
 
             System.out.print("Reach set (hull) of "+m.getFrom() + " that is valid from " + rs.startTime + " to " + rs.endTime + " of its local time is:\n");
             rs.hull.print();
@@ -254,12 +296,12 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
             current_reach_set.hull.print();
             System.out.print("Current local time of " + gvh.id.getName() + " is " +new Timestamp(now) + "\n");
 
+            // get average collision checking time on 1000 samples
             // check if message is useful
 
             long available_time_for_checking = rs.endTime.getTime() - 3 - 3 - now;
-
             if (available_time_for_checking > 0){ // time-synchronization error is 3 milliseconds
-                System.out.print("Useful time for checking collision and global safety property is " +available_time_for_checking + " milliseconds\n");
+                System.out.print("Useful time for checking collision and global safety property for " + gvh.id.getName() + " is " +available_time_for_checking + " milliseconds\n");
                 useful_message_flag = true;
                 System.out.print("The received reachable set from " +m.getFrom() + " is useful \n");
             }
@@ -278,31 +320,21 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
                 }
                 else{System.out.print(gvh.id.getName() + " will not collide with " +m.getFrom() + " in the next " + ((double)available_time_for_checking)/1000 + " seconds\n");}
 
-                // check global property
-
-                // global unsafe region:    x0 > 1200 and x1 > 2500 // Todo: define more general global safety sepcification
-
-                //double x0_max = current_reach_set.hull.intervals[0].max;
-                //double x0_min = current_reach_set.hull.intervals[0].min;
-                //double x1_max = rs.hull.intervals[0].max;
-                //double x1_min = rs.hull.intervals[0].min;
-
-                //if ((900 < x0_min) && (x0_max < 1200) && (x1_min > 900) && (x1_max < 1200)){
-                //global_safety_flag = false;
-                //    System.out.print("The global property may be violated in the next " + ((double)available_time_for_checking)/1000 + " seconds\n");
-                //}
-                //else{
-                //global_safety_flag = true;
-                //    System.out.print("The global safety property is guarantee in the next " + ((double)available_time_for_checking)/1000 + " seconds\n");
-                //}
-
-
             }
+            long collision_checking_time = System.currentTimeMillis() - now;
+
+            if (collision_checking_counts < 100){
+                collision_checking_counts++;
+                total_collision_checking_time = total_collision_checking_time + collision_checking_time;
+                if (collision_checking_counts == 100){
+                    collision_checking_writer.printf("Average collision checking time: "  + " "+((double)total_collision_checking_time/100) + " milliseconds \n");
+                }
+
+            }else{collision_checking_writer.close();}
+
 
         }
-
     }
-
 
     private FaceLiftingResult reachMsgDecoder(RobotMessage m){
         FaceLiftingResult rs = new FaceLiftingResult();
@@ -413,6 +445,7 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
         return collision;
     }
 
+
     @SuppressWarnings("unchecked")
     private <X, T> T getDestination(Map<X, T> map, int index) {
         // Keys must be 0-A format for this to work
@@ -424,6 +457,24 @@ public class two_quadcopters_searching_mission_app extends LogicThread {
         }
         else if(gvh.id.getName().equals("quadcopter1")){
             key = key+ "B-" + Integer.toString(index);
+        }
+        else if(gvh.id.getName().equals("quadcopter2")){
+            key = key+ "C-" + Integer.toString(index);
+        }
+        else if(gvh.id.getName().equals("quadcopter3")){
+            key = key+ "D-" + Integer.toString(index);
+        }
+        else if(gvh.id.getName().equals("quadcopter4")){
+            key = key+ "E-" + Integer.toString(index);
+        }
+        else if(gvh.id.getName().equals("quadcopter5")){
+            key = key+ "F-" + Integer.toString(index);
+        }
+        else if(gvh.id.getName().equals("quadcopter6")){
+            key = key+ "G-" + Integer.toString(index);
+        }
+        else if(gvh.id.getName().equals("quadcopter7")){
+            key = key+ "H-" + Integer.toString(index);
         }
 
         return map.get(key);
